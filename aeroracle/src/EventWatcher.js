@@ -27,6 +27,7 @@ class EventWatcher {
     async loop() {
         const currentBlock = await this.web3.eth.getBlockNumber();
 
+        // look only the blocks which have confirmations.
         const events = await this.contract.getPastEvents('allEvents', {
             fromBlock: currentBlock - (this.minConfimrations * 2 + 1),
             toBlock: currentBlock - this.minConfimrations + 1
@@ -45,3 +46,5 @@ class EventWatcher {
         if (this.looper) clearInterval(this.looper);
     }
 }
+
+module.exports = EventWatcher;

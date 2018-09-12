@@ -39,9 +39,9 @@ contract ChildChain {
     }
 
     /**
-     * @dev Deposit ERC20 token from the parent chain.
+     * @dev Submit deposit event of ERC20 token from the parent chain.
      */
-    function deposit(
+    function submitDeposit(
         address depositor,
         address parentToken,
         uint256 value)
