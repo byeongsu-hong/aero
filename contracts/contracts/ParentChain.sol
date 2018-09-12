@@ -4,6 +4,8 @@ import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "openzeppelin-solidity/contracts/MerkleProof.sol";
 import "openzeppelin-solidity/contracts/ECRecovery.sol";
 import "./OperatorRegistry.sol";
+import "./ChallengeLib.sol";
+import "./Transaction.sol";
 import "./ERC20.sol";
 
 /**
@@ -13,6 +15,8 @@ import "./ERC20.sol";
 contract ParentChain {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
+    using Transaction for bytes;
+    using ChallengeLib for ChallengeLib.Challenge[];
 
     event Deposit(
         address indexed depositor,
@@ -27,14 +31,45 @@ contract ParentChain {
     );
 
     struct Exit {
+        address prevOwner; // previous owner of coin
+        address owner;
+        uint256 amount;
+        uint256 createdAt;
+        uint256 bond;
+        uint256 prevBlock;
+        uint256 exitBlock;
+    }
+
+    enum State {
+        DEPOSITED,
+        EXITING,
+        EXITED
+    }
+
+    struct Coin {
         address owner;
         address token;
+        uint256 uid;
+        uint256 depositBlock;
+
+        // can represent v, a on Plasma Debit
+        uint256 value;
         uint256 amount;
+
+        // exit state of the coin
+        State state;
+        Exit exit;
     }
 
     struct ChildBlock {
         bytes32 root;
         uint256 timestamp;
+    }
+
+    // Track owners of txs that are pending a response
+    struct Challenge {
+        address owner;
+        uint256 blockNumber;
     }
 
     // constraints from Plasma MVP by OmiseGO
@@ -44,11 +79,12 @@ contract ParentChain {
 
     uint256 public currentChildBlock;
     uint256 public currentDepositBlock;
-    uint256 public currentFeeExit;
+    uint64 public coinCount = 0;
 
     mapping (uint256 => ChildBlock) public childBlocks;
-    mapping (uint256 => Exit) public exits;
-    mapping (address => address) public exitsQueues;
+    mapping (uint64 => Exit) public exits;
+    mapping (uint64 => Coin) public coins;
+    mapping (uint64 => ChallengeLib.Challenge[]) public challenges;
 
     modifier onlyOperator() { require(operatorRegistry.isOperator(msg.sender)); _;}
     modifier onlyValidator() { require(operatorRegistry.isValidator(msg.sender)); _;}
@@ -102,14 +138,8 @@ contract ParentChain {
         emit BlockSubmit(_root, block.timestamp);
     }
 
-    /**
-     * @dev Get block of the child chain.
-     */
-    function getChildBlock(uint256 _blockNumber) 
-        public 
-        view
-        returns (bytes32, uint256) {
-        return (childBlocks[_blockNumber].root, childBlocks[_blockNumber].timestamp);
+    function isDepositBlock(uint256 _blockNumber) internal view returns (bool) {
+        return _blockNumber % CHILD_BLOCK_INTERVAL == 0;
     }
 
     function getNextDepositBlockIndex()
@@ -118,5 +148,15 @@ contract ParentChain {
         returns (uint256)
     {
         return currentChildBlock.sub(CHILD_BLOCK_INTERVAL).add(currentDepositBlock);
+    }
+
+    /**
+     * @dev Get block of the child chain.
+     */
+    function getChildBlock(uint256 _blockNumber) 
+        public 
+        view
+        returns (bytes32, uint256) {
+        return (childBlocks[_blockNumber].root, childBlocks[_blockNumber].timestamp);
     }
 }
