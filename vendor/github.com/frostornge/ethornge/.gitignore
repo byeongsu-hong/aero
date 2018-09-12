@@ -1,0 +1,7 @@
+**/.idea
+**/Thumbs.db
+**/.DS_Store
+test
+ethornge
+Gopkg.lock
+Gopkg.toml
