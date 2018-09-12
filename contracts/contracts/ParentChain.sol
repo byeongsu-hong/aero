@@ -1,8 +1,9 @@
 pragma solidity ^0.4.24;
 
-import "./SafeMath.sol";
-import "./MerkleProof.sol";
-import "./ECDSA.sol";
+import "openzeppelin-solidity/contracts/math/SafeMath.sol";
+import "openzeppelin-solidity/contracts/MerkleProof.sol";
+import "openzeppelin-solidity/contracts/ECRecovery.sol";
+import "./OperatorRegistry.sol";
 import "./ERC20.sol";
 
 /**
@@ -39,7 +40,7 @@ contract ParentChain {
     // constraints from Plasma MVP by OmiseGO
     uint256 public constant CHILD_BLOCK_INTERVAL = 1000;
 
-    address public operator;
+    OperatorRegistry operatorRegistry;
 
     uint256 public currentChildBlock;
     uint256 public currentDepositBlock;
@@ -49,10 +50,11 @@ contract ParentChain {
     mapping (uint256 => Exit) public exits;
     mapping (address => address) public exitsQueues;
 
-    modifier onlyOperator() { require(msg.sender == operator, "Access Denied."); _;}
+    modifier onlyOperator() { require(operatorRegistry.isOperator(msg.sender)); _;}
+    modifier onlyValidator() { require(operatorRegistry.isValidator(msg.sender)); _;}
 
     constructor() public {
-        operator = msg.sender;
+        operatorRegistry = new OperatorRegistry();
     }
 
     /**
