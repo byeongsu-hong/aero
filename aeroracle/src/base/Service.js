@@ -1,3 +1,4 @@
+const fs = require('fs');
 
 class Service {
 
@@ -20,3 +21,5 @@ class Service {
         });
     }
 }
+
+module.exports = Service;

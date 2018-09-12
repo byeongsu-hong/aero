@@ -1,4 +1,3 @@
-const fs = require('fs');
 const Service = require('./base/Service');
 const EventWatcher = require('./EventWatcher');
 
@@ -24,7 +23,7 @@ class DepositService extends Service {
         this.watcher.start();
     }
 
-    onDeposit(eventData) {
+    async onDeposit(eventData) {
         const event = {
             name: eventData.event,
             data: eventData.returnValues,
@@ -50,3 +49,5 @@ class DepositService extends Service {
         await this.sendAndWaitForTx(tx);
     }
 }
+
+module.exports = DepositService;
