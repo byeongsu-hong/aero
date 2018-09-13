@@ -16,12 +16,12 @@ contract OperatorRegistry is Ownable {
     }
 
     function toggleOperator(address _address) public {
-        require(isOperator(msg.sender) || isOwner(), "Only operator can switch the operator.");
+        require(isOperator(msg.sender) || msg.sender == owner, "Only operator can switch the operator.");
         operators[_address] = !operators[_address];
     }
 
     function toggleValidator(address _address) public {
-        require(isValidator(msg.sender) || isOwner(), "Only operator can switch the operator.");
+        require(isValidator(msg.sender) || msg.sender == owner, "Only operator can switch the operator.");
         validators[_address] = !validators[_address];
     }
 
