@@ -2,7 +2,7 @@
 # Created by https://www.gitignore.io/api/go,osx,windows,intellij+all
 
 **/node_modules
-build/
+**/build/
 
 ### Go ###
 # Binaries for programs and plugins

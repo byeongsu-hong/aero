@@ -7,7 +7,11 @@
     "test": "test"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "truffle test",
+    "test:gas": "GAS_REPORTER=true npm test",
+    "console": "truffle console --network child",
+    "compile": "truffle compile",
+    "migrate:child": "truffle migrate --all --network child"
   },
   "author": "",
   "license": "ISC",
