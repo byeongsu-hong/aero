@@ -4,6 +4,7 @@ import (
 	"fmt"
 	ethutils "github.com/ethereum/go-ethereum/cmd/utils"
 	"github.com/ethereum/go-ethereum/eth"
+	"github.com/ethereum/go-ethereum/log"
 	"github.com/frostornge/ethornge/utils"
 	"gopkg.in/urfave/cli.v1"
 	"os"
@@ -18,36 +19,40 @@ func newApp() *cli.App {
 	app.Author = ""
 	app.Email = ""
 	app.Action = startNode
-	app.Flags = []cli.Flag {
+	app.Flags = []cli.Flag{
+		cli.BoolFlag{
+			Name:  "verbose",
+			Usage: "Log every output if the flag is given.",
+		},
 		cli.StringFlag{
-			Name: "genesis",
+			Name:  "genesis",
 			Value: "",
 			Usage: "Genesis block information generated from puppeth.",
 		},
 		cli.StringFlag{
-			Name: "host",
+			Name:  "host",
 			Value: "localhost",
-			Usage: "HTTP host for providing JSON RPC. (defaults to localhost— use 0.0.0.0 for public)",
+			Usage: "HTTP host for providing JSON RPC. Use 0.0.0.0 for public access.",
 		},
 		cli.IntFlag{
-			Name: "port",
+			Name:  "port",
 			Value: 7600,
 			Usage: "HTTP port for providing JSON RPC.",
 		},
 		cli.StringFlag{
-			Name: "wshost",
+			Name:  "wshost",
 			Value: "localhost",
-			Usage: "WebSocket host for providing real-time rpc. (defaults to localhost)",
+			Usage: "WebSocket host for providing real-time rpc.",
 		},
 		cli.IntFlag{
-			Name: "wsport",
+			Name:  "wsport",
 			Value: 7601,
 			Usage: "WebSocket port for providing real-time rpc.",
 		},
 		cli.IntFlag{
-			Name: "threads",
+			Name:  "threads",
 			Value: 0,
-			Usage: "Number of threads that will execute transactions. (defaults to 0 for NumCPU)",
+			Usage: "Number of threads that will execute transactions. (0=NumCPU)",
 		},
 	}
 	return app
@@ -56,6 +61,11 @@ func newApp() *cli.App {
 // initGenesis will initialise the given JSON format genesis file and writes it as
 // the zero'd block (i.e. genesis) or will fail hard if it can't succeed.
 func startNode(ctx *cli.Context) error {
+	// setup logger
+	if ctx.Bool("verbose") {
+		log.Root().SetHandler(log.StdoutHandler)
+	}
+
 	stack, err := setupNode(ctx)
 	if err != nil {
 		return err
