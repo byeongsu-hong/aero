@@ -2,6 +2,7 @@
 # Created by https://www.gitignore.io/api/go,osx,windows,intellij+all
 
 **/node_modules
+build/
 
 ### Go ###
 # Binaries for programs and plugins
@@ -20,6 +21,7 @@
 ### Go Patch ###
 # /vendor/
 /Godeps/
+testnode/
 
 ### Intellij+all ###
 .idea/**
