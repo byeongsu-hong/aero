@@ -14,7 +14,7 @@
 # [[constraint]]
 #   name = "github.com/user/project2"
 #   branch = "dev"
-#   source = "github.com/myfork/project2"
+#   source = "giit thub.com/myfork/project2"
 #
 # [[override]]
 #  name = "github.com/x/y"
@@ -24,3 +24,10 @@
   name = "github.com/frostornge/ethornge"
   revision = "4b61c8994c87c55a1b74d41cff679e40760a3a8c"
 
+[[override]]
+  name = "github.com/ethereum/go-ethereum"
+  version = "~1.8.15"
+
+[[override]]
+  name = "github.com/deckarep/golang-set"
+  revision = "cbaa98ba5575e67703b32b4b19f73c91f3c4159e"
