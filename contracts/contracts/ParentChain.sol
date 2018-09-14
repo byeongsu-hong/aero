@@ -52,7 +52,7 @@ contract ParentChain {
         uint256 uid;
         uint256 depositBlock;
 
-        // can represent v, a on Plasma Debit
+        // can represent v, a on Plasma Debit - unused for now.
         uint256 value;
         uint256 amount;
 

@@ -4,9 +4,9 @@ const DepositService = require('./src/DepositService');
 // hardcoded config
 const config = {
     oraclePrivateKey: '0x17af9b432ced6167a4dba5cec6517a0d545abe118dbd494572e07e6a2847ff39',
-    parentChainEndpoint: 'https://ropsten.infura.io/v3/e9783a0db20b4c85b1438019c6432dc3',
-    childChainEndpoint: 'http://localhost:8645',
-    deployments: [
+    parentChainEndpoint: 'http://18.179.100.185:4471',
+    childChainEndpoint: 'http://localhost:7600',
+    deployments: {
         ParentChain: {
             "abiPath": './abi/ParentChain.abi',
             "deployedAt": '0x0000000000000000000000000000000000000000',
@@ -15,7 +15,7 @@ const config = {
             "abiPath": './abi/ChildChain.abi',
             "deployedAt": '0x0000000000000000000000000000000000000000',
         },
-    ],
+    },
 };
 
 async function main(config) {
