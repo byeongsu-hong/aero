@@ -1,6 +1,6 @@
 pragma solidity ^0.4.24;
 
-import "./ERC20.sol";
+import "../utils/ERC20.sol";
 import "./ChildChain.sol";
 
 /**

@@ -3,10 +3,10 @@ pragma solidity ^0.4.24;
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "openzeppelin-solidity/contracts/MerkleProof.sol";
 import "openzeppelin-solidity/contracts/ECRecovery.sol";
-import "./OperatorRegistry.sol";
-import "./ChallengeLib.sol";
-import "./Transaction.sol";
-import "./ERC20.sol";
+import "../OperatorRegistry.sol";
+import "../utils/ChallengeLib.sol";
+import "../Transaction.sol";
+import "../utils/ERC20.sol";
 
 /**
  * @title ParentChain
