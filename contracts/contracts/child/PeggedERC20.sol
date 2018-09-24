@@ -14,7 +14,6 @@ contract PeggedERC20 is ERC20 {
     address public gateway;
 
     constructor(address gatewayAddress) {
-//        totalSupply = 0;
         gateway = gatewayAddress;
     }
 

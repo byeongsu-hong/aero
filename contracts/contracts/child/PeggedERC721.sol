@@ -14,7 +14,6 @@ contract PeggedERC721 is ERC721 {
     address public gateway;
 
     constructor(address gatewayAddress) {
-//        totalSupply = 0;
         gateway = gatewayAddress;
     }
 
