@@ -1,23 +1,21 @@
 package operator
 
 import (
+	"context"
 	"github.com/airbloc/aero/core"
 	"github.com/airbloc/aero/services"
-	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/core/types"
+	"github.com/ethereum/go-ethereum/log"
 )
 
 const (
 	// chainHeadChanSize is the size of channel listening to ChainHeadEvent.
 	chainHeadChanSize = 10
+	minConfirmations  = 3
 )
 
 type Operator struct {
 	aero *core.Aero
-
-	// subscription to the block generation of the child
-	newBlockCh  chan *types.Header
-	newBlockSub ethereum.Subscription
 
 	// to synchronize exit
 	exitCh chan bool
@@ -25,18 +23,39 @@ type Operator struct {
 
 func New(aero *core.Aero) *Operator {
 	operator := &Operator{
-		aero:       aero,
-		newBlockCh: make(chan *types.Header, chainHeadChanSize),
-		exitCh:     make(chan bool, 1),
+		aero:   aero,
+		exitCh: make(chan bool, 1),
 	}
 	return operator
 }
 
 func (operator *Operator) Start() {
-	defer operator.newBlockSub.Unsubscribe()
+	newParentBlock := make(chan *types.Header, chainHeadChanSize)
+	newChildBlock := make(chan *types.Header, chainHeadChanSize)
+
+	newParentBlockSub, err := operator.aero.Parent.SubscribeNewHead(context.Background(), newParentBlock)
+	if err != nil {
+		log.Error("failed to subscribe to parent block event", err.Error())
+		return
+	}
+	newChildBlockSub, err := operator.aero.Child.SubscribeNewHead(context.Background(), newChildBlock)
+	if err != nil {
+		log.Error("failed to subscribe to parent block event", err.Error())
+		return
+	}
+	defer newParentBlockSub.Unsubscribe()
+	defer newChildBlockSub.Unsubscribe()
+
 	for {
 		select {
-		case <-operator.newBlockCh:
+		case head := <-newParentBlock:
+			services.FetchDeposits(
+				operator.aero,
+				head.Number.Uint64()-(minConfirmations*2+1),
+				head.Number.Uint64()-(minConfirmations-1),
+			)
+
+		case <-newChildBlock:
 			services.SubmitBlock(operator.aero)
 
 		case <-operator.exitCh:

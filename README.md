@@ -1,7 +1,11 @@
 Aero
 =======
 
-Sidechain framework used on Airbloc. 
+Sidechain framework used on Airbloc.
+
+## Design Principles
+
+ * Separation of Concerns : Avoid modifying the blockchain backend, and aim for being as layer.
 
 ## Glossaries
 
