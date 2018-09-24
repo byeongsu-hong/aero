@@ -1,10 +1,15 @@
 package main
 
 import (
+	"crypto/ecdsa"
+	"crypto/rand"
 	"fmt"
+	"github.com/airbloc/aero/core"
 	"github.com/airbloc/aero/operator"
+	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	ethutils "github.com/ethereum/go-ethereum/cmd/utils"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/eth"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/ethereum/go-ethereum/log"
@@ -103,26 +108,22 @@ func startNode(ctx *cli.Context) error {
 		return fmt.Errorf("failed to start mining: %v", err)
 	}
 
-	childChain, err := ethclient.Dial("ws://" + stack.WSEndpoint())
-	if err != nil {
-		return err
-	}
+	privateKey, _ := ecdsa.GenerateKey(crypto.S256(), rand.Reader)
 
-	// connect to parent
-	parentChain, err := ethclient.Dial(ctx.String("parent"))
+	// setup aero
+	aero, err := core.NewAero(
+		"ws://"+stack.WSEndpoint(),
+		ctx.String("parent"),
+		common.HexToAddress("0x00000000000000000000"),
+		common.HexToAddress(ctx.String("parent_bridge")),
+		privateKey,
+	)
 	if err != nil {
-		return fmt.Errorf("failed to connect to parent chain: %v", err)
+		return fmt.Errorf("failed to initialize Aero : %v", err)
 	}
-
-	// TODO: contract options
-	parentChainAddr := common.HexToAddress(ctx.String("parent_bridge"))
-	childChainAddr := common.HexToAddress("0x00000000000000000000")
 
 	// start operator
-	op, err := operator.New(childChain, parentChain, parentChainAddr, childChainAddr)
-	if err != nil {
-		return fmt.Errorf("failed to initialize operator service : %v", err)
-	}
+	op := operator.New(aero)
 	go op.Start()
 
 	// wait for termination :P
