@@ -3,7 +3,7 @@
  */
 const fs = require('fs');
 
-const TARGETS = ['ParentChain', 'ChildChain'];
+const TARGETS = ['ParentChain', 'ChildChain', 'Pegger'];
 const TARGETS_DIR = './build';
 const DEST = '../aeroracle/abi';
 

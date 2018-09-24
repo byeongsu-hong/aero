@@ -13,7 +13,7 @@ contract PeggedERC20 is ERC20 {
     // an address of the gateway contract on child chain (ChildChain.sol) 
     address public gateway;
 
-    constructor(address gatewayAddress) {
+    constructor(address gatewayAddress) public {
         gateway = gatewayAddress;
     }
 

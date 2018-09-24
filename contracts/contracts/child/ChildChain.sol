@@ -85,12 +85,12 @@ contract ChildChain {
 
         // mint deposits to the depositor.
         if (which == Mode.ERC20) {
-           PeggedERC20 token = PeggedERC20(tokenAddress);
-           token.mint(depositor, amount);
+           PeggedERC20 token20 = PeggedERC20(tokenAddress);
+           token20.mint(depositor, amount);
         } else {
             uint256 tokenId = amount;
-            PeggedERC721 token = PeggedERC721(tokenAddress);
-            token.mint(depositor, tokenId);
+            PeggedERC721 token721 = PeggedERC721(tokenAddress);
+            token721.mint(depositor, tokenId);
         }
     }
 
@@ -113,13 +113,13 @@ contract ChildChain {
 
         // update the child state by burning.
         if (which == Mode.ERC20) {
-            PeggedERC20 token = PeggedERC20(tokenAddress);
-            token.burnFrom(withdrawer, amount);
+            PeggedERC20 token20 = PeggedERC20(tokenAddress);
+            token20.burnFrom(withdrawer, amount);
 
         } else if (which == Mode.ERC721) {
             uint256 tokenId = amount;
-            PeggedERC721 token = PeggedERC721(tokenAddress);
-            token.burnFrom(withdrawer, tokenId);
+            PeggedERC721 token721 = PeggedERC721(tokenAddress);
+            token721.burnFrom(withdrawer, tokenId);
         }
     }
 }

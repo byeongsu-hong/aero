@@ -28,7 +28,7 @@ contract Pegger is Ownable {
         address newOwner;
 
         // metadata
-        bytes32 owner;
+        address owner;
         bytes signature;
     }
 
@@ -40,7 +40,7 @@ contract Pegger is Ownable {
 
     PeggedERC721 token;
     mapping (bytes32 => Txn) transactions;
-    mapping (uint256 => int) lastBlockOf;
+    mapping (uint256 => uint256) lastBlockOf;
 
     bytes32[] pendingTransactions;
 
@@ -52,7 +52,7 @@ contract Pegger is Ownable {
         require(msg.sender == address(token), "Direct call is not allowed.");
 
         // build transaction data
-        Txn storage txn = new Txn();
+        Txn memory txn;
         txn.tokenId = tokenId;
         txn.prevBlock = lastBlockOf[tokenId];
         txn.newOwner = to;
@@ -73,19 +73,19 @@ contract Pegger is Ownable {
     }
 
     function saveWitness(bytes32 txnHash, bytes signature) public {
-        require(transactions[txnHash], "No Transaction ID found.");
+        require(transactions[txnHash].tokenId != 0, "No Transaction ID found.");
 
         // TODO: do we really need signature verification here?
-        Txn txn = transactions[txnHash];
+        Txn storage txn = transactions[txnHash];
         require(txnHash.recover(signature) == txn.owner, "Signature mismatch.");
 
         txn.signature = signature;
     }
 
     function submitNewBlock(uint256 newBlockNumber) public onlyOwner {
-        for (int i = 0; i < pendingTransactions.length; i++) {
-            bytes32 memory txnHash = pendingTransactions[i];
-            Txn memory txn = transactions[txnHash];
+        for (uint256 i = 0; i < pendingTransactions.length; i++) {
+            bytes32 txnHash = pendingTransactions[i];
+            Txn storage txn = transactions[txnHash];
 
             txn.status = Status.CONFIRMED;
             lastBlockOf[txn.tokenId] = newBlockNumber;

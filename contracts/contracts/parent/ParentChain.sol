@@ -83,7 +83,7 @@ contract ParentChain {
 
     mapping (uint256 => ChildBlock) public childBlocks;
     mapping (uint64 => Exit) public exits;
-    mapping (uint64 => Coin) public coins;
+    mapping (uint64 => Coin) coins;
     mapping (uint64 => ChallengeLib.Challenge[]) public challenges;
 
     modifier onlyOperator() { require(operatorRegistry.isOperator(msg.sender)); _;}
