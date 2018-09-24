@@ -14,6 +14,12 @@ contract Pegger is Ownable {
     using SafeMath for uint256;
     using ECRecovery for bytes32;
 
+    // type of transaction.
+    enum Mode {
+        ERC20,
+        ERC721
+    }
+
     enum Status {
         PENDING,
         CONFIRMED
@@ -93,6 +99,26 @@ contract Pegger is Ownable {
             emit ConfirmTransaction(txnHash, txn.owner, txn.tokenId);
         }
         delete pendingTransactions;
+    }
+
+    /**
+     * @dev Submit deposit event of ERC20 / ERC721 token from the parent chain,
+     * and creates a deposit block.
+     */
+    function submitDeposit(address depositor, address parentToken, uint256 amount, Mode which) public onlyOwner {
+        require(
+            parentToken == address(token),
+            "Unregistered token.");
+
+        // mint deposits to the depositor.
+        if (which == Mode.ERC20) {
+            PeggedERC20 token20 = PeggedERC20(parentToken);
+            token20.mint(depositor, amount);
+        } else {
+            uint256 tokenId = amount;
+            PeggedERC721 token721 = PeggedERC721(parentToken);
+            token721.mint(depositor, tokenId);
+        }
     }
 
     function getPendingTransactionCount() public view returns (uint256) {
