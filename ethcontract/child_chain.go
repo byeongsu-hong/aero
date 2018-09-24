@@ -16,7 +16,7 @@ import (
 )
 
 // ChildChainABI is the input ABI used to generate the binding from.
-const ChildChainABI = "[{\"constant\":false,\"inputs\":[],\"name\":\"renounceOwnership\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"owner\",\"outputs\":[{\"name\":\"\",\"type\":\"address\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_newOwner\",\"type\":\"address\"}],\"name\":\"transferOwnership\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"name\":\"_token\",\"type\":\"address\"}],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"name\":\"txnHash\",\"type\":\"bytes32\"},{\"indexed\":true,\"name\":\"owner\",\"type\":\"address\"},{\"indexed\":true,\"name\":\"tokenId\",\"type\":\"uint256\"}],\"name\":\"ConfirmTransaction\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"name\":\"previousOwner\",\"type\":\"address\"}],\"name\":\"OwnershipRenounced\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"name\":\"previousOwner\",\"type\":\"address\"},{\"indexed\":true,\"name\":\"newOwner\",\"type\":\"address\"}],\"name\":\"OwnershipTransferred\",\"type\":\"event\"},{\"constant\":false,\"inputs\":[{\"name\":\"from\",\"type\":\"address\"},{\"name\":\"to\",\"type\":\"address\"},{\"name\":\"tokenId\",\"type\":\"uint256\"}],\"name\":\"createTransaction\",\"outputs\":[{\"name\":\"txnHash\",\"type\":\"bytes32\"}],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"txnHash\",\"type\":\"bytes32\"},{\"name\":\"signature\",\"type\":\"bytes\"}],\"name\":\"saveWitness\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"newBlockNumber\",\"type\":\"uint256\"}],\"name\":\"submitNewBlock\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"}]"
+const ChildChainABI = "[{\"constant\":true,\"inputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"name\":\"lastBlockOf\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"name\":\"pendingTransactions\",\"outputs\":[{\"name\":\"\",\"type\":\"bytes32\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"\",\"type\":\"bytes32\"}],\"name\":\"transactions\",\"outputs\":[{\"name\":\"status\",\"type\":\"uint8\"},{\"name\":\"tokenId\",\"type\":\"uint256\"},{\"name\":\"prevBlock\",\"type\":\"uint256\"},{\"name\":\"newOwner\",\"type\":\"address\"},{\"name\":\"owner\",\"type\":\"address\"},{\"name\":\"signature\",\"type\":\"bytes\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[],\"name\":\"renounceOwnership\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"owner\",\"outputs\":[{\"name\":\"\",\"type\":\"address\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_newOwner\",\"type\":\"address\"}],\"name\":\"transferOwnership\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"name\":\"_token\",\"type\":\"address\"}],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"name\":\"txnHash\",\"type\":\"bytes32\"},{\"indexed\":true,\"name\":\"owner\",\"type\":\"address\"},{\"indexed\":true,\"name\":\"tokenId\",\"type\":\"uint256\"}],\"name\":\"ConfirmTransaction\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"name\":\"previousOwner\",\"type\":\"address\"}],\"name\":\"OwnershipRenounced\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"name\":\"previousOwner\",\"type\":\"address\"},{\"indexed\":true,\"name\":\"newOwner\",\"type\":\"address\"}],\"name\":\"OwnershipTransferred\",\"type\":\"event\"},{\"constant\":false,\"inputs\":[{\"name\":\"from\",\"type\":\"address\"},{\"name\":\"to\",\"type\":\"address\"},{\"name\":\"tokenId\",\"type\":\"uint256\"}],\"name\":\"createTransaction\",\"outputs\":[{\"name\":\"txnHash\",\"type\":\"bytes32\"}],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"txnHash\",\"type\":\"bytes32\"},{\"name\":\"signature\",\"type\":\"bytes\"}],\"name\":\"saveWitness\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"newBlockNumber\",\"type\":\"uint256\"}],\"name\":\"submitNewBlock\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"getPendingTransactionCount\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"}]"
 
 // ChildChain is an auto generated Go binding around an Ethereum contract.
 type ChildChain struct {
@@ -160,6 +160,58 @@ func (_ChildChain *ChildChainTransactorRaw) Transact(opts *bind.TransactOpts, me
 	return _ChildChain.Contract.contract.Transact(opts, method, params...)
 }
 
+// GetPendingTransactionCount is a free data retrieval call binding the contract method 0xddbd5d3f.
+//
+// Solidity: function getPendingTransactionCount() constant returns(uint256)
+func (_ChildChain *ChildChainCaller) GetPendingTransactionCount(opts *bind.CallOpts) (*big.Int, error) {
+	var (
+		ret0 = new(*big.Int)
+	)
+	out := ret0
+	err := _ChildChain.contract.Call(opts, out, "getPendingTransactionCount")
+	return *ret0, err
+}
+
+// GetPendingTransactionCount is a free data retrieval call binding the contract method 0xddbd5d3f.
+//
+// Solidity: function getPendingTransactionCount() constant returns(uint256)
+func (_ChildChain *ChildChainSession) GetPendingTransactionCount() (*big.Int, error) {
+	return _ChildChain.Contract.GetPendingTransactionCount(&_ChildChain.CallOpts)
+}
+
+// GetPendingTransactionCount is a free data retrieval call binding the contract method 0xddbd5d3f.
+//
+// Solidity: function getPendingTransactionCount() constant returns(uint256)
+func (_ChildChain *ChildChainCallerSession) GetPendingTransactionCount() (*big.Int, error) {
+	return _ChildChain.Contract.GetPendingTransactionCount(&_ChildChain.CallOpts)
+}
+
+// LastBlockOf is a free data retrieval call binding the contract method 0x3efd0ac2.
+//
+// Solidity: function lastBlockOf( uint256) constant returns(uint256)
+func (_ChildChain *ChildChainCaller) LastBlockOf(opts *bind.CallOpts, arg0 *big.Int) (*big.Int, error) {
+	var (
+		ret0 = new(*big.Int)
+	)
+	out := ret0
+	err := _ChildChain.contract.Call(opts, out, "lastBlockOf", arg0)
+	return *ret0, err
+}
+
+// LastBlockOf is a free data retrieval call binding the contract method 0x3efd0ac2.
+//
+// Solidity: function lastBlockOf( uint256) constant returns(uint256)
+func (_ChildChain *ChildChainSession) LastBlockOf(arg0 *big.Int) (*big.Int, error) {
+	return _ChildChain.Contract.LastBlockOf(&_ChildChain.CallOpts, arg0)
+}
+
+// LastBlockOf is a free data retrieval call binding the contract method 0x3efd0ac2.
+//
+// Solidity: function lastBlockOf( uint256) constant returns(uint256)
+func (_ChildChain *ChildChainCallerSession) LastBlockOf(arg0 *big.Int) (*big.Int, error) {
+	return _ChildChain.Contract.LastBlockOf(&_ChildChain.CallOpts, arg0)
+}
+
 // Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
 //
 // Solidity: function owner() constant returns(address)
@@ -184,6 +236,84 @@ func (_ChildChain *ChildChainSession) Owner() (common.Address, error) {
 // Solidity: function owner() constant returns(address)
 func (_ChildChain *ChildChainCallerSession) Owner() (common.Address, error) {
 	return _ChildChain.Contract.Owner(&_ChildChain.CallOpts)
+}
+
+// PendingTransactions is a free data retrieval call binding the contract method 0x63a8374d.
+//
+// Solidity: function pendingTransactions( uint256) constant returns(bytes32)
+func (_ChildChain *ChildChainCaller) PendingTransactions(opts *bind.CallOpts, arg0 *big.Int) ([32]byte, error) {
+	var (
+		ret0 = new([32]byte)
+	)
+	out := ret0
+	err := _ChildChain.contract.Call(opts, out, "pendingTransactions", arg0)
+	return *ret0, err
+}
+
+// PendingTransactions is a free data retrieval call binding the contract method 0x63a8374d.
+//
+// Solidity: function pendingTransactions( uint256) constant returns(bytes32)
+func (_ChildChain *ChildChainSession) PendingTransactions(arg0 *big.Int) ([32]byte, error) {
+	return _ChildChain.Contract.PendingTransactions(&_ChildChain.CallOpts, arg0)
+}
+
+// PendingTransactions is a free data retrieval call binding the contract method 0x63a8374d.
+//
+// Solidity: function pendingTransactions( uint256) constant returns(bytes32)
+func (_ChildChain *ChildChainCallerSession) PendingTransactions(arg0 *big.Int) ([32]byte, error) {
+	return _ChildChain.Contract.PendingTransactions(&_ChildChain.CallOpts, arg0)
+}
+
+// Transactions is a free data retrieval call binding the contract method 0x642f2eaf.
+//
+// Solidity: function transactions( bytes32) constant returns(status uint8, tokenId uint256, prevBlock uint256, newOwner address, owner address, signature bytes)
+func (_ChildChain *ChildChainCaller) Transactions(opts *bind.CallOpts, arg0 [32]byte) (struct {
+	Status    uint8
+	TokenId   *big.Int
+	PrevBlock *big.Int
+	NewOwner  common.Address
+	Owner     common.Address
+	Signature []byte
+}, error) {
+	ret := new(struct {
+		Status    uint8
+		TokenId   *big.Int
+		PrevBlock *big.Int
+		NewOwner  common.Address
+		Owner     common.Address
+		Signature []byte
+	})
+	out := ret
+	err := _ChildChain.contract.Call(opts, out, "transactions", arg0)
+	return *ret, err
+}
+
+// Transactions is a free data retrieval call binding the contract method 0x642f2eaf.
+//
+// Solidity: function transactions( bytes32) constant returns(status uint8, tokenId uint256, prevBlock uint256, newOwner address, owner address, signature bytes)
+func (_ChildChain *ChildChainSession) Transactions(arg0 [32]byte) (struct {
+	Status    uint8
+	TokenId   *big.Int
+	PrevBlock *big.Int
+	NewOwner  common.Address
+	Owner     common.Address
+	Signature []byte
+}, error) {
+	return _ChildChain.Contract.Transactions(&_ChildChain.CallOpts, arg0)
+}
+
+// Transactions is a free data retrieval call binding the contract method 0x642f2eaf.
+//
+// Solidity: function transactions( bytes32) constant returns(status uint8, tokenId uint256, prevBlock uint256, newOwner address, owner address, signature bytes)
+func (_ChildChain *ChildChainCallerSession) Transactions(arg0 [32]byte) (struct {
+	Status    uint8
+	TokenId   *big.Int
+	PrevBlock *big.Int
+	NewOwner  common.Address
+	Owner     common.Address
+	Signature []byte
+}, error) {
+	return _ChildChain.Contract.Transactions(&_ChildChain.CallOpts, arg0)
 }
 
 // CreateTransaction is a paid mutator transaction binding the contract method 0x0b826afa.

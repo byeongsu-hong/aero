@@ -39,10 +39,10 @@ contract Pegger is Ownable {
     );
 
     PeggedERC721 token;
-    mapping (bytes32 => Txn) transactions;
-    mapping (uint256 => uint256) lastBlockOf;
 
-    bytes32[] pendingTransactions;
+    mapping (bytes32 => Txn) public transactions;
+    mapping (uint256 => uint256) public lastBlockOf;
+    bytes32[] public pendingTransactions;
 
     constructor(PeggedERC721 _token) public {
         token = _token;
@@ -70,6 +70,7 @@ contract Pegger is Ownable {
         // save the transaction.
         // NOTE THAT txn.signature could be further provided by the client.
         transactions[txnHash] = txn;
+        pendingTransactions.push(txnHash);
     }
 
     function saveWitness(bytes32 txnHash, bytes signature) public {
@@ -92,5 +93,9 @@ contract Pegger is Ownable {
             emit ConfirmTransaction(txnHash, txn.owner, txn.tokenId);
         }
         delete pendingTransactions;
+    }
+
+    function getPendingTransactionCount() public view returns (uint256) {
+        return pendingTransactions.length;
     }
 }
