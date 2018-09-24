@@ -31,6 +31,7 @@ func NewAero(
 	parentBridgeAddress common.Address,
 	privateKey *ecdsa.PrivateKey,
 ) (*Aero, error) {
+
 	// connect to blockchains
 	child, err := ethclient.Dial(childUri)
 	if err != nil {
