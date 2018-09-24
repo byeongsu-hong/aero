@@ -4,7 +4,9 @@ import (
 	"fmt"
 	"github.com/airbloc/aero/operator"
 	ethutils "github.com/ethereum/go-ethereum/cmd/utils"
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/eth"
+	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/frostornge/ethornge/utils"
 	"gopkg.in/urfave/cli.v1"
@@ -30,6 +32,16 @@ func newApp() *cli.App {
 			Name:  "genesis",
 			Value: "",
 			Usage: "Genesis block information generated from puppeth.",
+		},
+		cli.StringFlag{
+			Name:  "parent",
+			Value: "http://localhost:8545",
+			Usage: "Accessible URI of the parent chain. Supports HTTP, WS, RPC.",
+		},
+		cli.StringFlag{
+			Name:  "parent_bridge",
+			Value: "0x00000000000000000000",
+			Usage: "Bridge contract (ParentChain) address on the parent chain.",
 		},
 		cli.StringFlag{
 			Name:  "host",
@@ -91,8 +103,26 @@ func startNode(ctx *cli.Context) error {
 		return fmt.Errorf("failed to start mining: %v", err)
 	}
 
+	childChain, err := ethclient.Dial("ws://" + stack.WSEndpoint())
+	if err != nil {
+		return err
+	}
+
+	// connect to parent
+	parentChain, err := ethclient.Dial(ctx.String("parent"))
+	if err != nil {
+		return fmt.Errorf("failed to connect to parent chain: %v", err)
+	}
+
+	// TODO: contract options
+	parentChainAddr := common.HexToAddress(ctx.String("parent_bridge"))
+	childChainAddr := common.HexToAddress("0x00000000000000000000")
+
 	// start operator
-	op := operator.New(ethereum, nil)
+	op, err := operator.New(childChain, parentChain, parentChainAddr, childChainAddr)
+	if err != nil {
+		return fmt.Errorf("failed to initialize operator service : %v", err)
+	}
 	go op.Start()
 
 	// wait for termination :P
