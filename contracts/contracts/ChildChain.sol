@@ -44,7 +44,7 @@ contract ChildChain {
         onlyOperator
     {
         require(parentToChildContracts[addressOnParent] == 0x0, "Already registered.");
-        require(token.gateway == address(this), "Given token uses different gateway.");
+        require(token.gateway() == address(this), "Given token uses different gateway.");
 
         parentToChildContracts[addressOnParent] = address(token);
     }
@@ -83,7 +83,7 @@ contract ChildChain {
 
         if (which == Mode.ERC20) {
             PeggedERC20 token = PeggedERC20(parentToChildContracts[parentToken]);
-            token.burn(withdrawer, amount);
+            token.burnFrom(withdrawer, amount);
 
         } else if (which == Mode.ERC721) {
 

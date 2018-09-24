@@ -14,7 +14,7 @@ contract PeggedERC721 is ERC721 {
     address public gateway;
 
     constructor(address gatewayAddress) {
-        _totalSupply = 0;
+//        totalSupply = 0;
         gateway = gatewayAddress;
     }
 
@@ -33,8 +33,8 @@ contract PeggedERC721 is ERC721 {
      * @dev Function to burn tokens for the withdrawal from this chain.
      */
     function burnFrom(address from, uint256 tokenId) public returns (bool) {
-        ChildChain memory gatewayContract = ChildChain(gateway);
-        require(msg.sender == gatewayContract.oracle, "Only oracle can burn withdrawals.");
+        ChildChain gatewayContract = ChildChain(gateway);
+        require(msg.sender == gatewayContract.oracle(), "Only oracle can burn withdrawals.");
 
         _burn(msg.sender, tokenId);
     }
