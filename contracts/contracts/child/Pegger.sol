@@ -59,10 +59,12 @@ contract Pegger is Ownable {
         txn.owner = from;
 
         // calculate hash by constructing an naive RLP encoding of the transaction.
-        bytes memory rlp = abi.encodePacked(bytes2(0xf857),
+        bytes memory rlp = abi.encodePacked(
+            bytes2(0xf857),
             bytes1(0xa0), txn.tokenId,
             bytes1(0xa0), txn.prevBlock,
-            bytes1(0x94), txn.newOwner);
+            bytes1(0x94), txn.newOwner
+        );
         txnHash = keccak256(rlp);
 
         // save the transaction.
