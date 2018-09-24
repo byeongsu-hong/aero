@@ -3,6 +3,7 @@
 
 **/node_modules
 **/build/
+build/
 
 ### Go ###
 # Binaries for programs and plugins

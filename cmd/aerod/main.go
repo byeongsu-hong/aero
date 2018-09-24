@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/airbloc/aero/operator"
 	ethutils "github.com/ethereum/go-ethereum/cmd/utils"
 	"github.com/ethereum/go-ethereum/eth"
 	"github.com/ethereum/go-ethereum/log"
@@ -20,9 +21,10 @@ func newApp() *cli.App {
 	app.Email = ""
 	app.Action = startNode
 	app.Flags = []cli.Flag{
-		cli.BoolFlag{
-			Name:  "verbose",
-			Usage: "Log every output if the flag is given.",
+		cli.IntFlag{
+			Name:  "verbosity",
+			Usage: "Logging verbosity: 0=silent, 1=error, 2=warn, 3=info, 4=debug, 5=detail",
+			Value: 3,
 		},
 		cli.StringFlag{
 			Name:  "genesis",
@@ -62,9 +64,9 @@ func newApp() *cli.App {
 // the zero'd block (i.e. genesis) or will fail hard if it can't succeed.
 func startNode(ctx *cli.Context) error {
 	// setup logger
-	if ctx.Bool("verbose") {
-		log.Root().SetHandler(log.StdoutHandler)
-	}
+	glogger := log.NewGlogHandler(log.StreamHandler(os.Stderr, log.TerminalFormat(true)))
+	glogger.Verbosity(log.Lvl(ctx.Int("verbosity")))
+	log.Root().SetHandler(glogger)
 
 	stack, err := setupNode(ctx)
 	if err != nil {
@@ -88,6 +90,10 @@ func startNode(ctx *cli.Context) error {
 	if err := ethereum.StartMining(threads); err != nil {
 		return fmt.Errorf("failed to start mining: %v", err)
 	}
+
+	// start operator
+	op := operator.New(ethereum, nil)
+	go op.Start()
 
 	// wait for termination :P
 	stack.Wait()
