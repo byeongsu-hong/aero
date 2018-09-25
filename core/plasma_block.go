@@ -3,7 +3,6 @@ package core
 import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/loomnetwork/mamamerkle"
-	"github.com/pkg/errors"
 	"math/big"
 )
 
@@ -24,7 +23,7 @@ func NewPlasmaBlock(transactions []*PlasmaTx) (*PlasmaBlock, error) {
 
 	tree, err := mamamerkle.NewSparseMerkleTree(64, leaves)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to construct SMT")
+		return nil, err
 	}
 	return &PlasmaBlock{
 		Transactions: transactions,
