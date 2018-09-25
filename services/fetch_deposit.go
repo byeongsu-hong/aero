@@ -2,7 +2,7 @@ package services
 
 import (
 	"github.com/airbloc/aero/core"
-	"github.com/airbloc/aero/ethcontract"
+	"github.com/airbloc/aero/contracts/binds"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/pkg/errors"
@@ -37,9 +37,9 @@ func FetchDeposits(aero *core.Aero, startBlock uint64, endBlock uint64) error {
 	return nil
 }
 
-func reportDeposit(aero *core.Aero, event *ethcontract.ParentChainDeposit) error {
+func reportDeposit(aero *core.Aero, event *contracts.ParentChainDeposit) error {
 	auth := bind.NewKeyedTransactor(aero.PrivateKey)
-	tx, err := aero.ChildBridge.SubmitDeposit(auth, event.Depositor, event.Token, event.Amount, 0)
+	tx, err := aero.ChildBridge.SubmitDeposit(auth, event.Depositor, event.Token, uint64(0), event.Amount, 0) // TODO: temp fill
 	if err != nil {
 		return err
 	}

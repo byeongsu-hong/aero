@@ -2,7 +2,7 @@ package core
 
 import (
 	"crypto/ecdsa"
-	"github.com/airbloc/aero/ethcontract"
+	"github.com/airbloc/aero/contracts/binds"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/pkg/errors"
@@ -15,8 +15,8 @@ type Aero struct {
 	Parent *ethclient.Client
 
 	// binding of Bridge Contracts
-	ChildBridge  *ethcontract.ChildChain
-	ParentBridge *ethcontract.ParentChain
+	ChildBridge  *contracts.ChildChain
+	ParentBridge *contracts.ParentChain
 
 	// private key of the account
 	PrivateKey *ecdsa.PrivateKey
@@ -43,11 +43,11 @@ func NewAero(
 	}
 
 	// setup contract bind
-	childBridge, err := ethcontract.NewChildChain(childBridgeAddress, child)
+	childBridge, err := contracts.NewChildChain(childBridgeAddress, child)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to locate ChildChain bridge contract")
 	}
-	parentBridge, err := ethcontract.NewParentChain(parentBridgeAddress, parent)
+	parentBridge, err := contracts.NewParentChain(parentBridgeAddress, parent)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to locate ParentChain bridge contract")
 	}
