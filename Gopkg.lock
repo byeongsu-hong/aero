@@ -34,6 +34,14 @@
   revision = "cff30e1d23fc9e800b2b5b4b41ef1817dda07e9f"
 
 [[projects]]
+  branch = "master"
+  digest = "1:41b8a0a92b6925572db8269b8dbaf10098195952068771ad1bf0ffa89c0b0071"
+  name = "github.com/cevaris/ordered_map"
+  packages = ["."]
+  pruneopts = ""
+  revision = "0efaee1733e3399a3cb88fc7d2ce340bf2e863d7"
+
+[[projects]]
   digest = "1:0deddd908b6b4b768cfc272c16ee61e7088a60f7fe2f06c547bd3d8e1f8b8e77"
   name = "github.com/davecgh/go-spew"
   packages = ["spew"]
@@ -289,6 +297,14 @@
   revision = "2b4488a37358b7283de4f9622553e85ebbe73125"
 
 [[projects]]
+  branch = "master"
+  digest = "1:0df911437b43fc7852e57fbd5cac2fbe82ed4f5102ca0d32ac624a2f9e1511f8"
+  name = "github.com/loomnetwork/mamamerkle"
+  packages = ["."]
+  pruneopts = ""
+  revision = "a9b875ea5655423f62bd8af69c541854f72d2709"
+
+[[projects]]
   digest = "1:9ea83adf8e96d6304f394d40436f2eb44c1dc3250d223b74088cc253a6cd0a1c"
   name = "github.com/mattn/go-colorable"
   packages = ["."]
@@ -532,6 +548,7 @@
     "github.com/ethereum/go-ethereum/params",
     "github.com/frostornge/ethornge/account",
     "github.com/frostornge/ethornge/utils",
+    "github.com/loomnetwork/mamamerkle",
     "github.com/pkg/errors",
     "github.com/stretchr/testify/assert",
     "gopkg.in/urfave/cli.v1",

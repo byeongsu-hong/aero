@@ -114,7 +114,7 @@ contract Pegger is Ownable {
         // mint deposits to the depositor.
         if (which == Mode.ERC20) {
             PeggedERC20 token20 = PeggedERC20(parentToken);
-            token20.mint(depositor, amount);
+            token20.addDepositTo(depositor, amount);
         } else {
             PeggedERC721 token721 = PeggedERC721(parentToken);
             token721.addDepositTo(depositor, slotId);

@@ -13,7 +13,7 @@ contract PeggedERC20 is ERC20 {
     // an address of the bridge contract on child chain (Pegger.sol)
     Pegger public bridge;
 
-    constructor(address _bridge) public {
+    constructor(Pegger _bridge) public {
         bridge = _bridge;
     }
 
