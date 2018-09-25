@@ -11,7 +11,7 @@ import "./Pegger.sol";
  */
 contract PeggedERC721 is ERC721Token {
 
-    // an address of the bridge contract on child chain (ChildChain.sol)
+    // an address of the bridge contract on child chain (Pegger.sol)
     Pegger public bridge;
 
     constructor(string _name, string _symbol, Pegger _bridge) ERC721Token(_name, _symbol) public {
