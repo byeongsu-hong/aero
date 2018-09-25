@@ -117,7 +117,7 @@ contract Pegger is Ownable {
             token20.mint(depositor, amount);
         } else {
             PeggedERC721 token721 = PeggedERC721(parentToken);
-            token721.mint(depositor, slotId);
+            token721.addDepositTo(depositor, slotId);
         }
     }
 

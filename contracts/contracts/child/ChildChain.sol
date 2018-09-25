@@ -61,7 +61,7 @@ contract ChildChain {
         onlyOperator
     {
         require(parentToChildContracts[addressOnParent] == 0x0, "Already registered.");
-        require(token.gateway() == address(this), "Given token uses different gateway.");
+        require(token.bridge() == address(this), "Given token uses different gateway.");
 
         parentToChildContracts[addressOnParent] = address(token);
     }
@@ -90,7 +90,7 @@ contract ChildChain {
         } else {
             uint256 tokenId = amount;
             PeggedERC721 token721 = PeggedERC721(tokenAddress);
-            token721.mint(depositor, tokenId);
+            token721.addDepositTo(depositor, tokenId);
         }
     }
 
@@ -119,7 +119,7 @@ contract ChildChain {
         } else if (which == Mode.ERC721) {
             uint256 tokenId = amount;
             PeggedERC721 token721 = PeggedERC721(tokenAddress);
-            token721.burnFrom(withdrawer, tokenId);
+            token721.withdrawFrom(withdrawer, tokenId);
         }
     }
 }

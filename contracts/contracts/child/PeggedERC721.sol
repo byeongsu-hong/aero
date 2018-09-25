@@ -1,40 +1,55 @@
 pragma solidity ^0.4.24;
 
-import "../utils/ERC721.sol";
+import "openzeppelin-solidity/contracts/token/ERC721/ERC721Token.sol";
 import "./ChildChain.sol";
+import "./Pegger.sol";
 
 /**
  * @title PeggedERC721
  * @dev Base ERC20 token contract for tokens on the child chain, which is pegged
  *   to original ERC20 on the parent chain.
  */
-contract PeggedERC721 is ERC721 {
+contract PeggedERC721 is ERC721Token {
 
-    // an address of the gateway contract on child chain (ChildChain.sol) 
-    address public gateway;
+    // an address of the bridge contract on child chain (ChildChain.sol)
+    Pegger public bridge;
 
-    constructor(address gatewayAddress) public {
-        gateway = gatewayAddress;
+    constructor(string _name, string _symbol, Pegger _bridge) ERC721Token(_name, _symbol) public {
+        bridge = _bridge;
+        // TODO: is registered?
     }
 
     /**
-    * @dev Function to mint tokens for the deposit from the parent chain.
+     * @dev Transfers the ownership of a given token ID to another address,
+     * and report the transaction to the parent chain.
+     * @param _from current owner of the token
+     * @param _to address to receive the ownership of the given token ID
+     * @param _tokenId uint256 ID of the token to be transferred
     */
-    function mint(address to, uint256 tokenId) public returns (bool) {
-        // PeggedERC20 should not create any tokens on the 
-        require(msg.sender == gateway, "Only gateway can mint deposits");
+    function transferFrom(address _from, address _to, uint256 _tokenId) public {
+        super.transferFrom(_from, _to, _tokenId);
 
-        _mint(to, tokenId);
+        // report transaction to the parent by creating Plasma TX.
+        bridge.createTransaction(_from, _to, uint64(_tokenId));
+    }
+
+    /**
+     * @dev Function to mint tokens for the deposit from the parent chain.
+     */
+    function addDepositTo(address to, uint64 slotId) public returns (bool) {
+        require(msg.sender == address(bridge), "Only bridge can mint deposits");
+
+        addTokenTo(to, uint256(slotId));
         return true;
     }
 
     /**
      * @dev Function to burn tokens for the withdrawal from this chain.
      */
-    function burnFrom(address from, uint256 tokenId) public returns (bool) {
-        ChildChain gatewayContract = ChildChain(gateway);
-        require(msg.sender == gatewayContract.oracle(), "Only oracle can burn withdrawals.");
+    function withdrawFrom(address from, uint64 slotId) public returns (bool) {
+        require(msg.sender == address(bridge), "Only oracle can burn withdrawals.");
 
-        _burn(from, tokenId);
+        removeTokenFrom(from, uint256(slotId));
+        return true;
     }
 }
