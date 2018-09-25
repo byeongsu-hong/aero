@@ -3,22 +3,24 @@ pragma solidity ^0.4.24;
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "openzeppelin-solidity/contracts/MerkleProof.sol";
 import "openzeppelin-solidity/contracts/ECRecovery.sol";
+import "openzeppelin-solidity/contracts/token/ERC20/SafeERC20.sol";
+import "openzeppelin-solidity/contracts/token/ERC721/ERC721.sol";
 import "../OperatorRegistry.sol";
 import "../utils/ChallengeLib.sol";
 import "../Transaction.sol";
-import "../utils/ERC20.sol";
 
 /**
  * @title ParentChain
  * @dev A gateway contract on the parent chain, bridging parent chain with the child chain.
  */
 contract ParentChain {
+    using SafeERC20 for ERC20;
     using SafeMath for uint256;
-    using SafeERC20 for IERC20;
     using Transaction for bytes;
     using ChallengeLib for ChallengeLib.Challenge[];
 
     event Deposit(
+        uint64 indexed slotId,
         address indexed depositor,
         uint256 indexed depositBlockNumber,
         address token,
@@ -40,6 +42,11 @@ contract ParentChain {
         uint256 exitBlock;
     }
 
+    enum Type {
+        ERC20,
+        ERC721
+    }
+
     enum State {
         DEPOSITED,
         EXITING,
@@ -47,6 +54,8 @@ contract ParentChain {
     }
 
     struct Coin {
+        Type type;
+
         address owner;
         address token;
         uint256 uid;
@@ -94,38 +103,62 @@ contract ParentChain {
     }
 
     /**
-     * @dev Deposit ERC20 token into the child chain.
+     * @dev Deposit non-fungible token (ERC721) into the child chain.
      */
-    function deposit(
-        address from,
-        IERC20 token,
-        uint256 value)
-        public
-    {
-        require(
-            currentDepositBlock < CHILD_BLOCK_INTERVAL, 
-            "Only allow up to 1000 deposits per child block.");
-        
-        token.safeTransferFrom(msg.sender, address(this), value);
+    function depositNonFungible(ERC721 token, address from, uint256 tokenId) public {
+        token.safeTransferFrom(from, address(this), tokenId);
+        deposit(Type.ERC721, token, from, tokenId, 1);
+    }
 
-        // create a deposit block
-        bytes memory data = abi.encodePacked(msg.sender, address(token), value);
-        bytes32 root = keccak256(data);
-        
+    /**
+     * @dev Deposit fungible token (ERC20) into the child chain.
+     */
+    function depositFungible(ERC20 token, address from, uint256 value) {
+        token.safeTransferFrom(from, address(this), value);
+        deposit(Type.ERC20, token, from, 0, value);
+    }
+
+    function deposit(Type type, address token, address from, uint256 tokenId, uint256 amount) private {
+        require(
+            currentDepositBlock < CHILD_BLOCK_INTERVAL,
+            "Only allow up to 1000 deposits per child block.");
+
+        bytes memory depositId = keccak256(abi.encodePacked(msg.sender, address(token), coinCount));
+        uint64 slotId = uint64(bytes8(depositId));
+
+        // generate deposit block
         uint256 depositBlock = getNextDepositBlockIndex();
         childBlocks[depositBlock] = ChildBlock({
-            root: root,
+            root: depositId,
             timestamp: block.timestamp
         });
         currentDepositBlock = currentDepositBlock.add(1);
 
-        emit Deposit(msg.sender, depositBlock, address(token), value);
+        // create coin. we use slot like Loom Network implementation
+        Coin storage coin = coins[slotId];
+        coin.type = type;
+        coin.owner = msg.sender;
+        coin.token = token;
+        coin.uid = tokenId;
+        coin.depositBlock = depositBlock;
+        coin.value = amount; // this needs to be modified on Plasma Debit
+        coin.amount = amount;
+        coin.state = State.DEPOSITED;
+
+        coinCount += 1;
+        emit Deposit(
+            slotId,
+            msg.sender,
+            depositBlock,
+            token,
+            amount
+        );
     }
 
     /**
      * @dev Submit a merkle root of child chain blocks, by the operator.
      */
-    function submitBlock(bytes32 _root) public onlyOperator {
+    function submitBlock(bytes32 _root) external onlyOperator returns (uint256) {
         childBlocks[currentChildBlock] = ChildBlock({
             root: _root,
             timestamp: block.timestamp
@@ -136,6 +169,7 @@ contract ParentChain {
         currentDepositBlock = 1;
         
         emit BlockSubmit(_root, block.timestamp);
+        return currentChildBlock;
     }
 
     function isDepositBlock(uint256 _blockNumber) internal view returns (bool) {
