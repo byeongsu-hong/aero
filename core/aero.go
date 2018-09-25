@@ -1,11 +1,15 @@
 package core
 
 import (
+	"context"
 	"crypto/ecdsa"
 	"github.com/airbloc/aero/contracts/binds"
+	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/pkg/errors"
+	"time"
 )
 
 // Aero is the context of the Aero framework.
@@ -59,4 +63,10 @@ func NewAero(
 		ParentBridge: parentBridge,
 		PrivateKey:   privateKey,
 	}, nil
+}
+
+func (aero *Aero) WaitParentTxToBeMined(tx *types.Transaction, timeout time.Duration) (*types.Receipt, error) {
+	timeoutContext, cancelTimeout := context.WithTimeout(context.Background(), timeout)
+	defer cancelTimeout()
+	return bind.WaitMined(timeoutContext, aero.Parent, tx)
 }
