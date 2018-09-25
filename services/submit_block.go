@@ -8,7 +8,6 @@ import (
 )
 
 func SubmitBlock(aero *core.Aero) error {
-	currentBlock := &core.PlasmaBlock{}
 
 	pendingTxnCount, err := aero.ChildBridge.GetPendingTransactionCount(nil)
 	if err != nil {
@@ -19,7 +18,9 @@ func SubmitBlock(aero *core.Aero) error {
 		return nil
 	}
 
+	transactions := make([]*core.PlasmaTx, pendingTxnCount.Int64())
 	for i := int64(0); i < pendingTxnCount.Int64(); i++ {
+		// TODO: big.Int
 		txnHash, err := aero.ChildBridge.PendingTransactions(nil, big.NewInt(i))
 		if err != nil {
 			log.Error("Failed to get pending transaction count from ChildChain")
@@ -33,8 +34,10 @@ func SubmitBlock(aero *core.Aero) error {
 		}
 
 		txn := core.NewPlasmaTxFromOnChain(txnHash, plasmaTxOnchain)
-		currentBlock.AddTransaction(txn)
+		transactions[i] = txn
 	}
-	// TODO: merklize, add root
+
+	block := core.NewPlasmaBlock(transactions)
+
 	return nil
 }

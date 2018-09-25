@@ -29,7 +29,7 @@ contract Pegger is Ownable {
         Status status;
 
         // items that will be RLP-encoded by the operator
-        uint256 tokenId; // slot
+        uint64 slotId;
         uint256 prevBlock;
         address newOwner;
 
@@ -41,7 +41,7 @@ contract Pegger is Ownable {
     event ConfirmTransaction(
         bytes32 indexed txnHash,
         address indexed owner,
-        uint256 indexed tokenId
+        uint64 indexed slotId
     );
 
     PeggedERC721 token;
@@ -54,20 +54,21 @@ contract Pegger is Ownable {
         token = _token;
     }
 
-    function createTransaction(address from, address to, uint256 tokenId) public returns (bytes32 txnHash) {
+    function createTransaction(address from, address to, uint64 slotId) public returns (bytes32 txnHash) {
+        // TODO: max transaction limit
         require(msg.sender == address(token), "Direct call is not allowed.");
 
         // build transaction data
         Txn memory txn;
-        txn.tokenId = tokenId;
-        txn.prevBlock = lastBlockOf[tokenId];
+        txn.slotId = slotId;
+        txn.prevBlock = lastBlockOf[slotId];
         txn.newOwner = to;
         txn.owner = from;
 
         // calculate hash by constructing an naive RLP encoding of the transaction.
         bytes memory rlp = abi.encodePacked(
             bytes2(0xf857),
-            bytes1(0xa0), txn.tokenId,
+            bytes1(0x88), txn.slotId,
             bytes1(0xa0), txn.prevBlock,
             bytes1(0x94), txn.newOwner
         );
@@ -80,7 +81,7 @@ contract Pegger is Ownable {
     }
 
     function saveWitness(bytes32 txnHash, bytes signature) public {
-        require(transactions[txnHash].tokenId != 0, "No Transaction ID found.");
+        require(transactions[txnHash].slotId != 0, "No Transaction ID found.");
 
         // TODO: do we really need signature verification here?
         Txn storage txn = transactions[txnHash];
@@ -95,8 +96,8 @@ contract Pegger is Ownable {
             Txn storage txn = transactions[txnHash];
 
             txn.status = Status.CONFIRMED;
-            lastBlockOf[txn.tokenId] = newBlockNumber;
-            emit ConfirmTransaction(txnHash, txn.owner, txn.tokenId);
+            lastBlockOf[txn.slotId] = newBlockNumber;
+            emit ConfirmTransaction(txnHash, txn.owner, txn.slotId);
         }
         delete pendingTransactions;
     }
@@ -105,7 +106,7 @@ contract Pegger is Ownable {
      * @dev Submit deposit event of ERC20 / ERC721 token from the parent chain,
      * and creates a deposit block.
      */
-    function submitDeposit(address depositor, address parentToken, uint256 amount, Mode which) public onlyOwner {
+    function submitDeposit(address depositor, address parentToken, uint64 slotId, uint256 amount, Mode which) public onlyOwner {
         require(
             parentToken == address(token),
             "Unregistered token.");
@@ -115,9 +116,8 @@ contract Pegger is Ownable {
             PeggedERC20 token20 = PeggedERC20(parentToken);
             token20.mint(depositor, amount);
         } else {
-            uint256 tokenId = amount;
             PeggedERC721 token721 = PeggedERC721(parentToken);
-            token721.mint(depositor, tokenId);
+            token721.mint(depositor, slotId);
         }
     }
 

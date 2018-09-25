@@ -16,7 +16,7 @@ import (
 )
 
 // ChildChainABI is the input ABI used to generate the binding from.
-const ChildChainABI = "[{\"constant\":true,\"inputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"name\":\"lastBlockOf\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"name\":\"pendingTransactions\",\"outputs\":[{\"name\":\"\",\"type\":\"bytes32\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"\",\"type\":\"bytes32\"}],\"name\":\"transactions\",\"outputs\":[{\"name\":\"status\",\"type\":\"uint8\"},{\"name\":\"tokenId\",\"type\":\"uint256\"},{\"name\":\"prevBlock\",\"type\":\"uint256\"},{\"name\":\"newOwner\",\"type\":\"address\"},{\"name\":\"owner\",\"type\":\"address\"},{\"name\":\"signature\",\"type\":\"bytes\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[],\"name\":\"renounceOwnership\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"owner\",\"outputs\":[{\"name\":\"\",\"type\":\"address\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_newOwner\",\"type\":\"address\"}],\"name\":\"transferOwnership\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"name\":\"_token\",\"type\":\"address\"}],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"name\":\"txnHash\",\"type\":\"bytes32\"},{\"indexed\":true,\"name\":\"owner\",\"type\":\"address\"},{\"indexed\":true,\"name\":\"tokenId\",\"type\":\"uint256\"}],\"name\":\"ConfirmTransaction\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"name\":\"previousOwner\",\"type\":\"address\"}],\"name\":\"OwnershipRenounced\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"name\":\"previousOwner\",\"type\":\"address\"},{\"indexed\":true,\"name\":\"newOwner\",\"type\":\"address\"}],\"name\":\"OwnershipTransferred\",\"type\":\"event\"},{\"constant\":false,\"inputs\":[{\"name\":\"from\",\"type\":\"address\"},{\"name\":\"to\",\"type\":\"address\"},{\"name\":\"tokenId\",\"type\":\"uint256\"}],\"name\":\"createTransaction\",\"outputs\":[{\"name\":\"txnHash\",\"type\":\"bytes32\"}],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"txnHash\",\"type\":\"bytes32\"},{\"name\":\"signature\",\"type\":\"bytes\"}],\"name\":\"saveWitness\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"newBlockNumber\",\"type\":\"uint256\"}],\"name\":\"submitNewBlock\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"depositor\",\"type\":\"address\"},{\"name\":\"parentToken\",\"type\":\"address\"},{\"name\":\"amount\",\"type\":\"uint256\"},{\"name\":\"which\",\"type\":\"uint8\"}],\"name\":\"submitDeposit\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"getPendingTransactionCount\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"}]"
+const ChildChainABI = "[{\"constant\":true,\"inputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"name\":\"lastBlockOf\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"name\":\"pendingTransactions\",\"outputs\":[{\"name\":\"\",\"type\":\"bytes32\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"\",\"type\":\"bytes32\"}],\"name\":\"transactions\",\"outputs\":[{\"name\":\"status\",\"type\":\"uint8\"},{\"name\":\"slotId\",\"type\":\"uint64\"},{\"name\":\"prevBlock\",\"type\":\"uint256\"},{\"name\":\"newOwner\",\"type\":\"address\"},{\"name\":\"owner\",\"type\":\"address\"},{\"name\":\"signature\",\"type\":\"bytes\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[],\"name\":\"renounceOwnership\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"owner\",\"outputs\":[{\"name\":\"\",\"type\":\"address\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"_newOwner\",\"type\":\"address\"}],\"name\":\"transferOwnership\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"name\":\"_token\",\"type\":\"address\"}],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"name\":\"txnHash\",\"type\":\"bytes32\"},{\"indexed\":true,\"name\":\"owner\",\"type\":\"address\"},{\"indexed\":true,\"name\":\"slotId\",\"type\":\"uint64\"}],\"name\":\"ConfirmTransaction\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"name\":\"previousOwner\",\"type\":\"address\"}],\"name\":\"OwnershipRenounced\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"name\":\"previousOwner\",\"type\":\"address\"},{\"indexed\":true,\"name\":\"newOwner\",\"type\":\"address\"}],\"name\":\"OwnershipTransferred\",\"type\":\"event\"},{\"constant\":false,\"inputs\":[{\"name\":\"from\",\"type\":\"address\"},{\"name\":\"to\",\"type\":\"address\"},{\"name\":\"slotId\",\"type\":\"uint64\"}],\"name\":\"createTransaction\",\"outputs\":[{\"name\":\"txnHash\",\"type\":\"bytes32\"}],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"txnHash\",\"type\":\"bytes32\"},{\"name\":\"signature\",\"type\":\"bytes\"}],\"name\":\"saveWitness\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"newBlockNumber\",\"type\":\"uint256\"}],\"name\":\"submitNewBlock\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"depositor\",\"type\":\"address\"},{\"name\":\"parentToken\",\"type\":\"address\"},{\"name\":\"slotId\",\"type\":\"uint64\"},{\"name\":\"amount\",\"type\":\"uint256\"},{\"name\":\"which\",\"type\":\"uint8\"}],\"name\":\"submitDeposit\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"getPendingTransactionCount\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"}]"
 
 // ChildChain is an auto generated Go binding around an Ethereum contract.
 type ChildChain struct {
@@ -266,10 +266,10 @@ func (_ChildChain *ChildChainCallerSession) PendingTransactions(arg0 *big.Int) (
 
 // Transactions is a free data retrieval call binding the contract method 0x642f2eaf.
 //
-// Solidity: function transactions( bytes32) constant returns(status uint8, tokenId uint256, prevBlock uint256, newOwner address, owner address, signature bytes)
+// Solidity: function transactions( bytes32) constant returns(status uint8, slotId uint64, prevBlock uint256, newOwner address, owner address, signature bytes)
 func (_ChildChain *ChildChainCaller) Transactions(opts *bind.CallOpts, arg0 [32]byte) (struct {
 	Status    uint8
-	TokenId   *big.Int
+	SlotId    uint64
 	PrevBlock *big.Int
 	NewOwner  common.Address
 	Owner     common.Address
@@ -277,7 +277,7 @@ func (_ChildChain *ChildChainCaller) Transactions(opts *bind.CallOpts, arg0 [32]
 }, error) {
 	ret := new(struct {
 		Status    uint8
-		TokenId   *big.Int
+		SlotId    uint64
 		PrevBlock *big.Int
 		NewOwner  common.Address
 		Owner     common.Address
@@ -290,10 +290,10 @@ func (_ChildChain *ChildChainCaller) Transactions(opts *bind.CallOpts, arg0 [32]
 
 // Transactions is a free data retrieval call binding the contract method 0x642f2eaf.
 //
-// Solidity: function transactions( bytes32) constant returns(status uint8, tokenId uint256, prevBlock uint256, newOwner address, owner address, signature bytes)
+// Solidity: function transactions( bytes32) constant returns(status uint8, slotId uint64, prevBlock uint256, newOwner address, owner address, signature bytes)
 func (_ChildChain *ChildChainSession) Transactions(arg0 [32]byte) (struct {
 	Status    uint8
-	TokenId   *big.Int
+	SlotId    uint64
 	PrevBlock *big.Int
 	NewOwner  common.Address
 	Owner     common.Address
@@ -304,10 +304,10 @@ func (_ChildChain *ChildChainSession) Transactions(arg0 [32]byte) (struct {
 
 // Transactions is a free data retrieval call binding the contract method 0x642f2eaf.
 //
-// Solidity: function transactions( bytes32) constant returns(status uint8, tokenId uint256, prevBlock uint256, newOwner address, owner address, signature bytes)
+// Solidity: function transactions( bytes32) constant returns(status uint8, slotId uint64, prevBlock uint256, newOwner address, owner address, signature bytes)
 func (_ChildChain *ChildChainCallerSession) Transactions(arg0 [32]byte) (struct {
 	Status    uint8
-	TokenId   *big.Int
+	SlotId    uint64
 	PrevBlock *big.Int
 	NewOwner  common.Address
 	Owner     common.Address
@@ -316,25 +316,25 @@ func (_ChildChain *ChildChainCallerSession) Transactions(arg0 [32]byte) (struct 
 	return _ChildChain.Contract.Transactions(&_ChildChain.CallOpts, arg0)
 }
 
-// CreateTransaction is a paid mutator transaction binding the contract method 0x0b826afa.
+// CreateTransaction is a paid mutator transaction binding the contract method 0xb3d3a508.
 //
-// Solidity: function createTransaction(from address, to address, tokenId uint256) returns(txnHash bytes32)
-func (_ChildChain *ChildChainTransactor) CreateTransaction(opts *bind.TransactOpts, from common.Address, to common.Address, tokenId *big.Int) (*types.Transaction, error) {
-	return _ChildChain.contract.Transact(opts, "createTransaction", from, to, tokenId)
+// Solidity: function createTransaction(from address, to address, slotId uint64) returns(txnHash bytes32)
+func (_ChildChain *ChildChainTransactor) CreateTransaction(opts *bind.TransactOpts, from common.Address, to common.Address, slotId uint64) (*types.Transaction, error) {
+	return _ChildChain.contract.Transact(opts, "createTransaction", from, to, slotId)
 }
 
-// CreateTransaction is a paid mutator transaction binding the contract method 0x0b826afa.
+// CreateTransaction is a paid mutator transaction binding the contract method 0xb3d3a508.
 //
-// Solidity: function createTransaction(from address, to address, tokenId uint256) returns(txnHash bytes32)
-func (_ChildChain *ChildChainSession) CreateTransaction(from common.Address, to common.Address, tokenId *big.Int) (*types.Transaction, error) {
-	return _ChildChain.Contract.CreateTransaction(&_ChildChain.TransactOpts, from, to, tokenId)
+// Solidity: function createTransaction(from address, to address, slotId uint64) returns(txnHash bytes32)
+func (_ChildChain *ChildChainSession) CreateTransaction(from common.Address, to common.Address, slotId uint64) (*types.Transaction, error) {
+	return _ChildChain.Contract.CreateTransaction(&_ChildChain.TransactOpts, from, to, slotId)
 }
 
-// CreateTransaction is a paid mutator transaction binding the contract method 0x0b826afa.
+// CreateTransaction is a paid mutator transaction binding the contract method 0xb3d3a508.
 //
-// Solidity: function createTransaction(from address, to address, tokenId uint256) returns(txnHash bytes32)
-func (_ChildChain *ChildChainTransactorSession) CreateTransaction(from common.Address, to common.Address, tokenId *big.Int) (*types.Transaction, error) {
-	return _ChildChain.Contract.CreateTransaction(&_ChildChain.TransactOpts, from, to, tokenId)
+// Solidity: function createTransaction(from address, to address, slotId uint64) returns(txnHash bytes32)
+func (_ChildChain *ChildChainTransactorSession) CreateTransaction(from common.Address, to common.Address, slotId uint64) (*types.Transaction, error) {
+	return _ChildChain.Contract.CreateTransaction(&_ChildChain.TransactOpts, from, to, slotId)
 }
 
 // RenounceOwnership is a paid mutator transaction binding the contract method 0x715018a6.
@@ -379,25 +379,25 @@ func (_ChildChain *ChildChainTransactorSession) SaveWitness(txnHash [32]byte, si
 	return _ChildChain.Contract.SaveWitness(&_ChildChain.TransactOpts, txnHash, signature)
 }
 
-// SubmitDeposit is a paid mutator transaction binding the contract method 0x1d088899.
+// SubmitDeposit is a paid mutator transaction binding the contract method 0xa560cd7e.
 //
-// Solidity: function submitDeposit(depositor address, parentToken address, amount uint256, which uint8) returns()
-func (_ChildChain *ChildChainTransactor) SubmitDeposit(opts *bind.TransactOpts, depositor common.Address, parentToken common.Address, amount *big.Int, which uint8) (*types.Transaction, error) {
-	return _ChildChain.contract.Transact(opts, "submitDeposit", depositor, parentToken, amount, which)
+// Solidity: function submitDeposit(depositor address, parentToken address, slotId uint64, amount uint256, which uint8) returns()
+func (_ChildChain *ChildChainTransactor) SubmitDeposit(opts *bind.TransactOpts, depositor common.Address, parentToken common.Address, slotId uint64, amount *big.Int, which uint8) (*types.Transaction, error) {
+	return _ChildChain.contract.Transact(opts, "submitDeposit", depositor, parentToken, slotId, amount, which)
 }
 
-// SubmitDeposit is a paid mutator transaction binding the contract method 0x1d088899.
+// SubmitDeposit is a paid mutator transaction binding the contract method 0xa560cd7e.
 //
-// Solidity: function submitDeposit(depositor address, parentToken address, amount uint256, which uint8) returns()
-func (_ChildChain *ChildChainSession) SubmitDeposit(depositor common.Address, parentToken common.Address, amount *big.Int, which uint8) (*types.Transaction, error) {
-	return _ChildChain.Contract.SubmitDeposit(&_ChildChain.TransactOpts, depositor, parentToken, amount, which)
+// Solidity: function submitDeposit(depositor address, parentToken address, slotId uint64, amount uint256, which uint8) returns()
+func (_ChildChain *ChildChainSession) SubmitDeposit(depositor common.Address, parentToken common.Address, slotId uint64, amount *big.Int, which uint8) (*types.Transaction, error) {
+	return _ChildChain.Contract.SubmitDeposit(&_ChildChain.TransactOpts, depositor, parentToken, slotId, amount, which)
 }
 
-// SubmitDeposit is a paid mutator transaction binding the contract method 0x1d088899.
+// SubmitDeposit is a paid mutator transaction binding the contract method 0xa560cd7e.
 //
-// Solidity: function submitDeposit(depositor address, parentToken address, amount uint256, which uint8) returns()
-func (_ChildChain *ChildChainTransactorSession) SubmitDeposit(depositor common.Address, parentToken common.Address, amount *big.Int, which uint8) (*types.Transaction, error) {
-	return _ChildChain.Contract.SubmitDeposit(&_ChildChain.TransactOpts, depositor, parentToken, amount, which)
+// Solidity: function submitDeposit(depositor address, parentToken address, slotId uint64, amount uint256, which uint8) returns()
+func (_ChildChain *ChildChainTransactorSession) SubmitDeposit(depositor common.Address, parentToken common.Address, slotId uint64, amount *big.Int, which uint8) (*types.Transaction, error) {
+	return _ChildChain.Contract.SubmitDeposit(&_ChildChain.TransactOpts, depositor, parentToken, slotId, amount, which)
 }
 
 // SubmitNewBlock is a paid mutator transaction binding the contract method 0xcafb00a0.
@@ -513,14 +513,14 @@ func (it *ChildChainConfirmTransactionIterator) Close() error {
 type ChildChainConfirmTransaction struct {
 	TxnHash [32]byte
 	Owner   common.Address
-	TokenId *big.Int
+	SlotId  uint64
 	Raw     types.Log // Blockchain specific contextual infos
 }
 
-// FilterConfirmTransaction is a free log retrieval operation binding the contract event 0x22fd6ddff754e935b7ace6a8177eea9d7b6fa906710d7e093a0f676cc203139d.
+// FilterConfirmTransaction is a free log retrieval operation binding the contract event 0x80e064808a697320936bc53930baab9e01c97b58f18f925c837ff77092d351a1.
 //
-// Solidity: e ConfirmTransaction(txnHash indexed bytes32, owner indexed address, tokenId indexed uint256)
-func (_ChildChain *ChildChainFilterer) FilterConfirmTransaction(opts *bind.FilterOpts, txnHash [][32]byte, owner []common.Address, tokenId []*big.Int) (*ChildChainConfirmTransactionIterator, error) {
+// Solidity: e ConfirmTransaction(txnHash indexed bytes32, owner indexed address, slotId indexed uint64)
+func (_ChildChain *ChildChainFilterer) FilterConfirmTransaction(opts *bind.FilterOpts, txnHash [][32]byte, owner []common.Address, slotId []uint64) (*ChildChainConfirmTransactionIterator, error) {
 
 	var txnHashRule []interface{}
 	for _, txnHashItem := range txnHash {
@@ -530,22 +530,22 @@ func (_ChildChain *ChildChainFilterer) FilterConfirmTransaction(opts *bind.Filte
 	for _, ownerItem := range owner {
 		ownerRule = append(ownerRule, ownerItem)
 	}
-	var tokenIdRule []interface{}
-	for _, tokenIdItem := range tokenId {
-		tokenIdRule = append(tokenIdRule, tokenIdItem)
+	var slotIdRule []interface{}
+	for _, slotIdItem := range slotId {
+		slotIdRule = append(slotIdRule, slotIdItem)
 	}
 
-	logs, sub, err := _ChildChain.contract.FilterLogs(opts, "ConfirmTransaction", txnHashRule, ownerRule, tokenIdRule)
+	logs, sub, err := _ChildChain.contract.FilterLogs(opts, "ConfirmTransaction", txnHashRule, ownerRule, slotIdRule)
 	if err != nil {
 		return nil, err
 	}
 	return &ChildChainConfirmTransactionIterator{contract: _ChildChain.contract, event: "ConfirmTransaction", logs: logs, sub: sub}, nil
 }
 
-// WatchConfirmTransaction is a free log subscription operation binding the contract event 0x22fd6ddff754e935b7ace6a8177eea9d7b6fa906710d7e093a0f676cc203139d.
+// WatchConfirmTransaction is a free log subscription operation binding the contract event 0x80e064808a697320936bc53930baab9e01c97b58f18f925c837ff77092d351a1.
 //
-// Solidity: e ConfirmTransaction(txnHash indexed bytes32, owner indexed address, tokenId indexed uint256)
-func (_ChildChain *ChildChainFilterer) WatchConfirmTransaction(opts *bind.WatchOpts, sink chan<- *ChildChainConfirmTransaction, txnHash [][32]byte, owner []common.Address, tokenId []*big.Int) (event.Subscription, error) {
+// Solidity: e ConfirmTransaction(txnHash indexed bytes32, owner indexed address, slotId indexed uint64)
+func (_ChildChain *ChildChainFilterer) WatchConfirmTransaction(opts *bind.WatchOpts, sink chan<- *ChildChainConfirmTransaction, txnHash [][32]byte, owner []common.Address, slotId []uint64) (event.Subscription, error) {
 
 	var txnHashRule []interface{}
 	for _, txnHashItem := range txnHash {
@@ -555,12 +555,12 @@ func (_ChildChain *ChildChainFilterer) WatchConfirmTransaction(opts *bind.WatchO
 	for _, ownerItem := range owner {
 		ownerRule = append(ownerRule, ownerItem)
 	}
-	var tokenIdRule []interface{}
-	for _, tokenIdItem := range tokenId {
-		tokenIdRule = append(tokenIdRule, tokenIdItem)
+	var slotIdRule []interface{}
+	for _, slotIdItem := range slotId {
+		slotIdRule = append(slotIdRule, slotIdItem)
 	}
 
-	logs, sub, err := _ChildChain.contract.WatchLogs(opts, "ConfirmTransaction", txnHashRule, ownerRule, tokenIdRule)
+	logs, sub, err := _ChildChain.contract.WatchLogs(opts, "ConfirmTransaction", txnHashRule, ownerRule, slotIdRule)
 	if err != nil {
 		return nil, err
 	}

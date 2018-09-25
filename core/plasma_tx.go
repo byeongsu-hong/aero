@@ -6,7 +6,7 @@ import (
 )
 
 type PlasmaTx struct {
-	TokenId     *big.Int        `json:"tokenId"`
+	SlotId      uint64          `json:"slotId"`
 	PrevBlockId *big.Int        `json:"prevBlock"`
 	NewOwner    *common.Address `json:"owner"`
 
@@ -20,7 +20,7 @@ type PlasmaTx struct {
 
 type PlasmaTxOnchain struct {
 	Status    uint8
-	TokenId   *big.Int
+	SlotId    uint64
 	PrevBlock *big.Int
 	NewOwner  common.Address
 	Owner     common.Address
@@ -29,7 +29,7 @@ type PlasmaTxOnchain struct {
 
 func NewPlasmaTxFromOnChain(hash common.Hash, onchainTx PlasmaTxOnchain) *PlasmaTx {
 	tx := &PlasmaTx{
-		TokenId:     onchainTx.TokenId,
+		SlotId:      onchainTx.SlotId,
 		PrevBlockId: onchainTx.PrevBlock,
 		NewOwner:    &onchainTx.NewOwner,
 		Hash:        &hash,
