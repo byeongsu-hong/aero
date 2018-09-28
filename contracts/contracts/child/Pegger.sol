@@ -54,30 +54,29 @@ contract Pegger is Ownable {
         token = _token;
     }
 
-    function createTransaction(address from, address to, uint64 slotId) public returns (bytes32 txnHash) {
+    function createTransaction(address from, address to, uint64 slotId) public returns (bytes32) {
         // TODO: max transaction limit
         require(msg.sender == address(token), "Direct call is not allowed.");
 
-        // build transaction data
-        Txn memory txn;
+        // calculate hash by constructing an naive RLP encoding of the transaction.
+        bytes memory rlp = abi.encodePacked(
+            bytes2(0xf857),
+            bytes1(0x88), slotId,
+            bytes1(0xa0), lastBlockOf[slotId],
+            bytes1(0x94), to
+        );
+        bytes32 memory txnHash = keccak256(rlp);
+
+        // save the transaction.
+        // NOTE THAT txn.signature could be further provided by the client.
+        Txn storage txn = transactions[txnHash];
         txn.slotId = slotId;
         txn.prevBlock = lastBlockOf[slotId];
         txn.newOwner = to;
         txn.owner = from;
 
-        // calculate hash by constructing an naive RLP encoding of the transaction.
-        bytes memory rlp = abi.encodePacked(
-            bytes2(0xf857),
-            bytes1(0x88), txn.slotId,
-            bytes1(0xa0), txn.prevBlock,
-            bytes1(0x94), txn.newOwner
-        );
-        txnHash = keccak256(rlp);
-
-        // save the transaction.
-        // NOTE THAT txn.signature could be further provided by the client.
-        transactions[txnHash] = txn;
         pendingTransactions.push(txnHash);
+        return txnHash;
     }
 
     function saveWitness(bytes32 txnHash, bytes signature) public {

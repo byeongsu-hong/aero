@@ -8,6 +8,7 @@ import "openzeppelin-solidity/contracts/token/ERC721/ERC721.sol";
 import "../OperatorRegistry.sol";
 import "../utils/ChallengeLib.sol";
 import "../Transaction.sol";
+import "./SparseMerkleTree.sol";
 
 /**
  * @title ParentChain
@@ -17,6 +18,7 @@ contract ParentChain {
     using SafeERC20 for ERC20;
     using SafeMath for uint256;
     using Transaction for bytes;
+    using ECRecovery for bytes32;
     using ChallengeLib for ChallengeLib.Challenge[];
 
     event Deposit(
@@ -85,6 +87,7 @@ contract ParentChain {
     uint256 public constant CHILD_BLOCK_INTERVAL = 1000;
 
     OperatorRegistry operatorRegistry;
+    SparseMerkleTree merkleTree;
 
     uint256 public currentChildBlock;
     uint256 public currentDepositBlock;
@@ -100,7 +103,10 @@ contract ParentChain {
 
     constructor() public {
         operatorRegistry = new OperatorRegistry();
+        merkleTree = new SparseMerkleTree();
     }
+
+    // User-side actions
 
     /**
      * @dev Deposit non-fungible token (ERC721) into the child chain.
@@ -154,6 +160,71 @@ contract ParentChain {
             amount
         );
     }
+
+    function exit(
+        bytes exitTxData, bytes exitProof, uint256 exitBlock,
+        bytes prevTxData, bytes prevProof, uint256 prevBlock,
+        bytes sign
+    ) public {
+        if(prevBlock == 0) {
+            depositExit(
+                exitBlock,
+                exitTxData,
+                exitProof,
+                sign
+            );
+        } else {
+            defaultExit(
+                exitBlock,
+                exitTxData, exitProof,
+                prevTxData, prevProof,
+                sign
+            );
+        }
+    }
+
+    function depositExit(
+        uint256 blockNumber,
+        bytes exitTxData,
+        bytes exitProof,
+        bytes sign
+    ) private {
+        Transaction.Tx memory exitTx = exitTxData.getTx();
+
+        require(exitTx.owner == msg.owner, "only owner can exit");
+        require(exitTx.prevBlock == 0, "prev block should be zero in deposit tx");
+
+        require(
+            merkleTree.checkMembership(
+                exitTx.hash,
+                childBlocks[blockNumber].root,
+                exitTx.slot,
+                exitProof
+            ),
+            "check membership failed"
+        );
+    }
+
+    function defaultExit(
+        uint256 blockNumber,
+        bytes exitTxData, bytes exitProof,
+        bytes prevTxData, bytes prevProof,
+        bytes sign
+    ) private {
+        Transaction.Tx memory exitTx = exitTxData.getTx();
+        Transaction.Tx memory prevTx = prevTxData.getTx();
+
+    }
+
+    function challenge() public {
+
+    }
+
+    function finalize() public {
+
+    }
+
+    // Operator-side actions
 
     /**
      * @dev Submit a merkle root of child chain blocks, by the operator.
