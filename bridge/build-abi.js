@@ -29,8 +29,12 @@ TARGETS.forEach(target => {
 // WARN: hardcoded build script
 const parentCommand = `-pkg contracts -type ParentBridge -abi ${DEST}/ParentBridge.abi -bin ${DEST}/ParentBridge.bin -out binds/parent_bridge.go`;
 const childCommand = `-pkg contracts -type ChildBridge -abi ${DEST}/ChildBridge.abi -bin ${DEST}/ChildBridge.bin -out binds/child_bridge.go`;
+const tokenCommand = `-pkg contracts -type ABLToken -abi ${DEST}/ABLToken.abi -bin ${DEST}/ABLToken.bin -out binds/abl_token.go`;
 
 spawn('abigen', parentCommand.split(' '), { stdio: 'inherit' }).on('exit', (code) => {
     if (code !== 0) return;
-    spawn('abigen', childCommand.split(' '), { stdio: 'inherit' }).on('exit', process.exit);
+    spawn('abigen', childCommand.split(' '), { stdio: 'inherit' }).on('exit', (code) => {
+        if (code !== 0) return;
+        spawn('abigen', tokenCommand.split(' '), { stdio: 'inherit' }).on('exit', process.exit);
+    });
 });

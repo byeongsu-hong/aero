@@ -2,6 +2,7 @@ package operator
 
 import (
 	"context"
+
 	"github.com/airbloc/aero/core"
 	"github.com/airbloc/aero/services"
 	"github.com/ethereum/go-ethereum/core/types"
@@ -15,55 +16,59 @@ const (
 )
 
 type Operator struct {
-	aero *core.Aero
-
-	// to synchronize exit
-	exitCh chan bool
+	aero   *core.Aero
+	ctx    context.Context
+	cancel context.CancelFunc
 }
 
 func New(aero *core.Aero) *Operator {
+	ctx, cancel := context.WithCancel(context.Background())
 	operator := &Operator{
 		aero:   aero,
-		exitCh: make(chan bool, 1),
+		ctx:    ctx,
+		cancel: cancel,
 	}
 	return operator
 }
 
 func (operator *Operator) Start() {
-	newParentBlock := make(chan *types.Header, chainHeadChanSize)
-	newChildBlock := make(chan *types.Header, chainHeadChanSize)
+	go func(aero *core.Aero) {
+		newParentBlock := make(chan *types.Header, chainHeadChanSize)
+		newChildBlock := make(chan *types.Header, chainHeadChanSize)
 
-	newParentBlockSub, err := operator.aero.Parent.SubscribeNewHead(context.Background(), newParentBlock)
-	if err != nil {
-		log.Error("failed to subscribe to parent block event", err.Error())
-		return
-	}
-	newChildBlockSub, err := operator.aero.Child.SubscribeNewHead(context.Background(), newChildBlock)
-	if err != nil {
-		log.Error("failed to subscribe to parent block event", err.Error())
-		return
-	}
-	defer newParentBlockSub.Unsubscribe()
-	defer newChildBlockSub.Unsubscribe()
-
-	for {
-		select {
-		case head := <-newParentBlock:
-			services.FetchDeposits(
-				operator.aero,
-				head.Number.Uint64()-(minConfirmations*2+1),
-				head.Number.Uint64()-(minConfirmations-1),
-			)
-
-		case <-newChildBlock:
-			services.SubmitBlock(operator.aero)
-
-		case <-operator.exitCh:
+		newParentBlockSub, err := aero.Parent.SubscribeNewHead(context.Background(), newParentBlock)
+		if err != nil {
+			log.Error("failed to subscribe to parent block event", err.Error())
 			return
 		}
-	}
+
+		newChildBlockSub, err := aero.Child.SubscribeNewHead(context.Background(), newChildBlock)
+		if err != nil {
+			log.Error("failed to subscribe to child block event", err.Error())
+			return
+		}
+		defer newParentBlockSub.Unsubscribe()
+		defer newChildBlockSub.Unsubscribe()
+
+		for {
+			select {
+			case head := <-newParentBlock:
+				services.FetchDeposits(
+					aero,
+					head.Number.Uint64()-(minConfirmations*2+1),
+					head.Number.Uint64()-(minConfirmations-1),
+				)
+
+			case <-newChildBlock:
+				services.SubmitBlock(aero)
+
+			case <-operator.ctx.Done():
+				return
+			}
+		}
+	}(operator.aero)
 }
 
 func (operator *Operator) Stop() {
-	operator.exitCh <- true
+	operator.cancel()
 }

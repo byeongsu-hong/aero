@@ -3,13 +3,14 @@ package core
 import (
 	"context"
 	"crypto/ecdsa"
-	"github.com/airbloc/aero/contracts/binds"
+	"time"
+
+	"github.com/airbloc/aero/bridge/binds"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/pkg/errors"
-	"time"
 )
 
 // Aero is the context of the Aero framework.
@@ -19,8 +20,10 @@ type Aero struct {
 	Parent *ethclient.Client
 
 	// binding of Bridge Contracts
-	ChildBridge  *contracts.ChildChain
-	ParentBridge *contracts.ParentChain
+	ChildBridge      *contracts.ChildBridge
+	ChildBridgeAddr  common.Address
+	ParentBridge     *contracts.ParentBridge
+	ParentBridgeAddr common.Address
 
 	// private key of the account
 	PrivateKey *ecdsa.PrivateKey
@@ -31,11 +34,12 @@ type Aero struct {
 func NewAero(
 	childUri string,
 	parentUri string,
-	childBridgeAddress common.Address,
-	parentBridgeAddress common.Address,
+	childBridge *contracts.ChildBridge,
+	childBridgeAddr common.Address,
+	parentBridge *contracts.ParentBridge,
+	parentBridgeAddr common.Address,
 	privateKey *ecdsa.PrivateKey,
 ) (*Aero, error) {
-
 	// connect to blockchains
 	child, err := ethclient.Dial(childUri)
 	if err != nil {
@@ -46,22 +50,14 @@ func NewAero(
 		return nil, errors.Wrap(err, "failed to connect to parent chain")
 	}
 
-	// setup contract bind
-	childBridge, err := contracts.NewChildChain(childBridgeAddress, child)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to locate ChildChain bridge contract")
-	}
-	parentBridge, err := contracts.NewParentChain(parentBridgeAddress, parent)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to locate ParentChain bridge contract")
-	}
-
 	return &Aero{
-		Child:        child,
-		Parent:       parent,
-		ChildBridge:  childBridge,
-		ParentBridge: parentBridge,
-		PrivateKey:   privateKey,
+		Child:            child,
+		Parent:           parent,
+		ChildBridge:      childBridge,
+		ChildBridgeAddr:  childBridgeAddr,
+		ParentBridge:     parentBridge,
+		ParentBridgeAddr: parentBridgeAddr,
+		PrivateKey:       privateKey,
 	}, nil
 }
 

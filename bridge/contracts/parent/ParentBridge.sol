@@ -129,7 +129,7 @@ contract ParentBridge {
             currentDepositBlock < CHILD_BLOCK_INTERVAL,
             "Only allow up to 1000 deposits per child block.");
 
-        bytes32 depositId = keccak256(abi.encodePacked(from, address(token), coinCount));
+        bytes32 depositId = keccak256(abi.encodePacked(from, address(token), tokenId));
         uint64 slotId = uint64(bytes8(depositId));
 
         // generate deposit block
@@ -163,9 +163,7 @@ contract ParentBridge {
         if(exitBlock % CHILD_BLOCK_INTERVAL != 0) {
             depositExit(
                 exitBlock,
-                childBlocks[exitBlock].root,
-                exitTxData,
-                exitProof
+                exitTxData
             );
         } else {
             defaultExit(
@@ -177,17 +175,19 @@ contract ParentBridge {
         }
     }
 
+    // TODO: fix coin.uid hash collision
     function depositExit(
         uint256 blockNumber,
-        bytes32 root,
-        bytes exitTxData,
-        bytes exitProof
+        bytes exitTxData
     ) private {
         Transaction.Tx memory exitTx = exitTxData.getTx();
+        Coin storage coin = coins[exitTx.slotId];
 
         require(exitTx.newOwner == msg.sender, "only owner can exit");
-        require(exitTx.prevBlock == 0, "prev block should be zero in deposit tx");
-        require(inclusionCheck(exitTx, root, exitProof), "membership check failed");
+        require(
+            childBlocks[blockNumber].root ==
+            keccak256(abi.encodePacked(msg.sender, coin.token, coin.uid)),
+            "membership check failed");
 
         submitExit(
             exitTx.slotId,
@@ -300,12 +300,24 @@ contract ParentBridge {
         coin.state = State.EXITED;
         coin.owner = coin.exit.owner;
 
-        ERC721 token = ERC721(coin.token);
-        address owner = coin.owner;
-        uint256 tokenId = coin.uid; // reentrancy
-        delete coins[slotId];
+        address owner;
+        uint256 data;
 
-        token.safeTransferFrom(this, owner, tokenId);
+        if(coin.typ == Type.ERC20) {
+            ERC20 token20 = ERC20(coin.token);
+            owner = coin.owner;
+            data = coin.value;
+            delete coins[slotId];
+
+            token20.safeTransfer(owner, data);
+        } else {
+            ERC721 token721 = ERC721(coin.token);
+            owner = coin.owner;
+            data = coin.uid; // reentrancy
+            delete coins[slotId];
+
+            token721.safeTransferFrom(this, owner, data);
+        }
         emit ExitFinalized(slotId, coin.owner);
     }
 
