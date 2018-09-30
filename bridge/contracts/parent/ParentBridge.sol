@@ -357,7 +357,7 @@ contract ParentBridge {
         return (childBlocks[_blockNumber].root, childBlocks[_blockNumber].timestamp);
     }
 
-    function getCoin(uint64 slotId) external view returns (
+    function getCoin(uint64 slotId) public view returns (
         Type,
         address,
         uint256,
