@@ -4,7 +4,7 @@
 const fs = require('fs');
 const spawn = require('child_process').spawn;
 
-const TARGETS = ['ParentChain', 'Pegger'];
+const TARGETS = ['ParentBridge', 'ChildBridge'];
 const TARGETS_DIR = './build';
 const DEST = './build/abi';
 
@@ -21,13 +21,14 @@ try {
 
 TARGETS.forEach(target => {
     const truffleBuild = require(`${TARGETS_DIR}/contracts/${target}.json`);
-    const abi = JSON.stringify(truffleBuild.abi);
-    fs.writeFileSync(`${DEST}/${target}.abi`, abi);
+    const { abi, bytecode } = truffleBuild;
+    fs.writeFileSync(`${DEST}/${target}.abi`, JSON.stringify(abi));
+    fs.writeFileSync(`${DEST}/${target}.bin`, bytecode);
 });
 
 // WARN: hardcoded build script
-const parentCommand = `-pkg contracts -type ParentChain -abi ${DEST}/ParentChain.abi -out binds/parent_chain.go`;
-const childCommand = `-pkg contracts -type ChildChain -abi ${DEST}/Pegger.abi -out binds/child_chain.go`;
+const parentCommand = `-pkg contracts -type ParentBridge -abi ${DEST}/ParentBridge.abi -bin ${DEST}/ParentBridge.bin -out binds/parent_bridge.go`;
+const childCommand = `-pkg contracts -type ChildBridge -abi ${DEST}/ChildBridge.abi -bin ${DEST}/ChildBridge.bin -out binds/child_bridge.go`;
 
 spawn('abigen', parentCommand.split(' '), { stdio: 'inherit' }).on('exit', (code) => {
     if (code !== 0) return;

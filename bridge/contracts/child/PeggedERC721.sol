@@ -1,7 +1,7 @@
 pragma solidity ^0.4.24;
 
 import "openzeppelin-solidity/contracts/token/ERC721/ERC721Token.sol";
-import "./Pegger.sol";
+import "./ChildBridge.sol";
 
 /**
  * @title PeggedERC721
@@ -11,9 +11,9 @@ import "./Pegger.sol";
 contract PeggedERC721 is ERC721Token {
 
     // an address of the bridge contract on child chain (Pegger.sol)
-    Pegger public bridge;
+    ChildBridge public bridge;
 
-    constructor(string _name, string _symbol, Pegger _bridge) ERC721Token(_name, _symbol) public {
+    constructor(string _name, string _symbol, ChildBridge _bridge) ERC721Token(_name, _symbol) public {
         bridge = _bridge;
         // TODO: is registered?
     }

@@ -10,7 +10,7 @@ import "./PeggedERC721.sol";
  * @dev A ERC721 Pegger,
  * which is a proof-of-concept implementation of the higher-level Plasma Cash.
  */
-contract Pegger is Ownable {
+contract ChildBridge is Ownable {
     using SafeMath for uint256;
     using ECRecovery for bytes32;
 
@@ -54,7 +54,11 @@ contract Pegger is Ownable {
         token = _token;
     }
 
-    function createTransaction(address from, address to, uint64 slotId) public returns (bytes32) {
+    function createTransaction(
+        address from,
+        address to,
+        uint64 slotId
+    ) public returns (bytes32) {
         // TODO: max transaction limit
         require(msg.sender == address(token), "Direct call is not allowed.");
 
@@ -63,9 +67,9 @@ contract Pegger is Ownable {
             bytes2(0xf857),
             bytes1(0x88), slotId,
             bytes1(0xa0), lastBlockOf[slotId],
-            bytes1(0x94), to
+            bytes1(0x94), to // newOwner
         );
-        bytes32 memory txnHash = keccak256(rlp);
+        bytes32 txnHash = keccak256(rlp);
 
         // save the transaction.
         // NOTE THAT txn.signature could be further provided by the client.
@@ -105,7 +109,13 @@ contract Pegger is Ownable {
      * @dev Submit deposit event of ERC20 / ERC721 token from the parent chain,
      * and creates a deposit block.
      */
-    function submitDeposit(address depositor, address parentToken, uint64 slotId, uint256 amount, Mode which) public onlyOwner {
+    function submitDeposit(
+        address depositor,
+        address parentToken,
+        uint64 slotId,
+        uint256 amount,
+        Mode which
+    ) public onlyOwner {
         require(
             parentToken == address(token),
             "Unregistered token.");

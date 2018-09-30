@@ -11,27 +11,23 @@ library Transaction {
     using RLP for bytes;
     using RLP for RLP.RLPItem;
 
-    struct TX {
-        uint64 slot;
+    struct Tx {
+        uint64 slotId;
         uint256 prevBlock;
-        address owner;
-        uint256 value; // v
-        uint256 amount; // a
+        address newOwner;
         bytes32 hash;
     }
 
-    function getTx(bytes memory txBytes) internal pure returns (TX memory) {
-        RLP.RLPItem[] memory rlpTx = txBytes.toRLPItem().toList(5);
-        TX memory transaction;
+    function getTx(bytes memory txBytes) internal pure returns (Tx memory) {
+        RLP.RLPItem[] memory rlpTx = txBytes.toRLPItem().toList(3);
+        Tx memory transaction;
 
-        transaction.slot = uint64(rlpTx[0].toUint());
+        transaction.slotId = uint64(rlpTx[0].toUint());
         transaction.prevBlock = rlpTx[1].toUint();
-        transaction.owner = rlpTx[2].toAddress();
-        transaction.value = rlpTx[3].toUint();
-        transaction.value = rlpTx[4].toUint();
+        transaction.newOwner = rlpTx[2].toAddress();
         if (transaction.prevBlock == 0) {
             // deposit transaction
-            transaction.hash = keccak256(abi.encodePacked(transaction.slot));
+            transaction.hash = keccak256(abi.encodePacked(transaction.slotId));
         } else {
             transaction.hash = keccak256(txBytes);
         }
@@ -39,7 +35,7 @@ library Transaction {
     }
 
     function getHash(bytes memory txBytes) internal pure returns (bytes32 hash) {
-        RLP.RLPItem[] memory rlpTx = txBytes.toRLPItem().toList(5);
+        RLP.RLPItem[] memory rlpTx = txBytes.toRLPItem().toList(3);
         uint64 slot = uint64(rlpTx[0].toUint());
         uint256 prevBlock = uint256(rlpTx[1].toUint());
 
@@ -51,8 +47,8 @@ library Transaction {
         }
     }
 
-    function getOwner(bytes memory txBytes) internal pure returns (address owner) {
-        RLP.RLPItem[] memory rlpTx = txBytes.toRLPItem().toList(5);
-        owner = rlpTx[2].toAddress();
+    function getOwner(bytes memory txBytes) internal pure returns (address newOwner) {
+        RLP.RLPItem[] memory rlpTx = txBytes.toRLPItem().toList(3);
+        newOwner = rlpTx[2].toAddress();
     }
 }

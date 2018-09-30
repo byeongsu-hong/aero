@@ -37,7 +37,7 @@ func IteratorExample() {
 
 	for i := 0; i < n; i++ {
 		// Insert data into OrderedMap
-		om.Set(i, fmt.Sprintf("%d", i*i))
+		om.Set(i, fmt.Sprintf("%d", i * i))
 	}
 
 	// Iterate though values
