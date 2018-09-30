@@ -357,7 +357,7 @@ contract ParentBridge {
         return (childBlocks[_blockNumber].root, childBlocks[_blockNumber].timestamp);
     }
 
-    function getCoin(uint64 slotId) public view returns (
+    function getCoinBySlotId(uint64 slotId) public view returns (
         Type,
         address,
         uint256,
@@ -376,38 +376,15 @@ contract ParentBridge {
         );
     }
 
-    function getCoins(uint64 _start, uint64 _end) external view returns (
-        Type[],
-        address[],
-        uint256[],
-        uint256[],
-        uint256[],
-        State[]
+    function getCoinByCount(uint64 count) public view returns (
+        Type,
+        address,
+        uint256,
+        uint256,
+        uint256,
+        State
     ) {
-        require(_end <= coinCount, "no more coins");
-        require(_end.sub(_start) <= MAX_ITERATION, "gas limit");
-
-        uint256 arrlen = _end.sub(_start);
-        Type[] memory types = new Type[](arrlen);
-        address[] memory owners = new address[](arrlen);
-        uint256[] memory values = new uint256[](arrlen);
-        uint256[] memory blocks = new uint256[](arrlen);
-        uint256[] memory times = new uint256[](arrlen);
-        State[] memory states = new State[](arrlen);
-
-        uint64 j = 0;
-        for(uint64 i = _start; i < _end; i++) {
-            (types[j], owners[j], values[j], blocks[j], times[j], states[j]) = getCoin(coinRef[i]);
-            j++;
-        }
-
-        return (
-            types,
-            owners,
-            values,
-            blocks,
-            times,
-            states
-        );
+        return getCoinById(coinRef(count));
     }
+
 }
