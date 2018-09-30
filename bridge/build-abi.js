@@ -4,7 +4,7 @@
 const fs = require('fs');
 const spawn = require('child_process').spawn;
 
-const TARGETS = ['ParentBridge', 'ChildBridge'];
+const TARGETS = ['ParentBridge', 'ChildBridge', 'ABLToken'];
 const TARGETS_DIR = './build';
 const DEST = './build/abi';
 
