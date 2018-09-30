@@ -98,7 +98,7 @@ contract ParentBridge {
         address from,
         uint256 tokenId
     ) public {
-        token.safeTransferFrom(from, address(this), tokenId);
+        token.safeTransferFrom(from, this, tokenId);
         deposit(Type.ERC721, token, from, tokenId, 1);
     }
 
@@ -110,7 +110,7 @@ contract ParentBridge {
         address from,
         uint256 value
     ) public {
-        token.safeTransferFrom(from, address(this), value);
+        token.safeTransferFrom(from, this, value);
         deposit(Type.ERC20, token, from, 0, value);
     }
 
@@ -292,12 +292,23 @@ contract ParentBridge {
         if (coin.state != State.EXITING) return;
         if (block.number.sub(coin.exit.createdAt) <= CHALLENGE_PERIOD) return;
 
-        delete coins[slotId].exit;
+        coin.state = State.EXITED;
+        coin.owner = coin.exit.owner;
+
+        ERC721 token = ERC721(coin.token);
+        address owner = coin.owner;
+        uint256 tokenId = coin.uid; // reentrancy
+        delete coins[slotId];
+
+        token.safeTransferFrom(this, owner, tokenId);
         emit ExitFinalized(slotId, coin.owner);
     }
 
     function finalizeMany(uint64[] slotIds) public {
-
+        require(slotIds.length <= 256, "gas limit");
+        for(uint i = 0; i < slotIds.length; i++) {
+            finalize(slotIds[i]);
+        }
     }
 
     // Operator-side actions
