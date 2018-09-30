@@ -1,9 +1,14 @@
 pragma solidity ^0.4.24;
 
-import "openzeppelin-solidity/contracts/token/ERC20/DetailedERC20.sol";
+import "openzeppelin-solidity/contracts/token/ERC20/MintableToken.sol";
 
 
-contract PeggedABLToken is DetailedERC20 {
-    constructor() DetailedERC20("ABLTokenTest", "ABLT", 10 ** 18) public {
+contract ABLToken is MintableToken {
+    string public name = "ABLTokenTest";
+    string public symbol = "ABLT";
+    uint8 public decimals = 18;
+
+    constructor() public {
+        mint(msg.sender, 400000 * 10 ** 18);
     }
 }

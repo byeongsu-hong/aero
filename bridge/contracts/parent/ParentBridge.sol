@@ -1,28 +1,25 @@
 pragma solidity ^0.4.24;
 
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
-import "openzeppelin-solidity/contracts/MerkleProof.sol";
 import "openzeppelin-solidity/contracts/ECRecovery.sol";
 import "openzeppelin-solidity/contracts/token/ERC20/SafeERC20.sol";
 import "openzeppelin-solidity/contracts/token/ERC721/ERC721.sol";
-import "../OperatorRegistry.sol";
+import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 import "../Transaction.sol";
 import "./SparseMerkleTree.sol";
-import "../utils/SafeMath64.sol";
 
 /**
  * @title ParentChain
  * @dev A gateway contract on the parent chain, bridging parent chain with the child chain.
  */
-contract ParentBridge {
+contract ParentBridge is Ownable {
     using SafeERC20 for ERC20;
     using SafeMath for uint256;
-    using SafeMath64 for uint64;
     using Transaction for bytes;
     using ECRecovery for bytes32;
 
     event Deposit(uint64 indexed slotId, address indexed owner, uint256 indexed blockNumber);
-    event BlockSubmit(bytes32 root, uint256 timestamp);
+    event BlockSubmit(uint256 blockNumber, bytes32 root, uint256 timestamp);
     event ExitStarted(uint64 indexed slotId, address indexed owner);
     event ExitRejected(uint64 indexed slotId, address indexed claimer);
     event ExitFinalized(uint64 indexed slotId, address indexed owner);
@@ -73,7 +70,6 @@ contract ParentBridge {
     uint256 public constant CHALLENGE_PERIOD = 200; // no timestamp. no.
     uint256 public constant MAX_ITERATION = 100;
 
-    OperatorRegistry operatorRegistry;
     SparseMerkleTree merkleTree;
 
     uint256 public currentChildBlock;
@@ -84,11 +80,7 @@ contract ParentBridge {
     mapping (uint64 => uint64) coinRef;
     mapping (uint64 => Coin) coins;
 
-    modifier onlyOperator() { require(operatorRegistry.isOperator(msg.sender)); _;}
-    modifier onlyValidator() { require(operatorRegistry.isValidator(msg.sender)); _;}
-
     constructor() public {
-        operatorRegistry = new OperatorRegistry();
         merkleTree = new SparseMerkleTree();
     }
 
@@ -102,7 +94,7 @@ contract ParentBridge {
         address from,
         uint256 tokenId
     ) public {
-        token.safeTransferFrom(from, this, tokenId);
+        token.safeTransferFrom(from, address(this), tokenId);
         deposit(Type.ERC721, token, from, tokenId, 1);
     }
 
@@ -114,7 +106,7 @@ contract ParentBridge {
         address from,
         uint256 value
     ) public {
-        token.safeTransferFrom(from, this, value);
+        token.safeTransferFrom(from, address(this), value);
         deposit(Type.ERC20, token, from, 0, value);
     }
 
@@ -249,21 +241,21 @@ contract ParentBridge {
             coins[slotId].state == State.EXITING,
             "only exiting coin can challenge");
 
-        Transaction.Tx memory Tx = claimTxData.getTx();
+        Transaction.Tx memory txn = claimTxData.getTx();
         Coin storage coin = coins[slotId];
-        require(Tx.slotId == slotId, "invalid slot");
-        require(Tx.hash.recover(sign) == coin.exit.prevOwner, "invalid sig");
+        require(txn.slotId == slotId, "invalid slot");
+        require(txn.hash.recover(sign) == coin.exit.prevOwner, "invalid sig");
 
         if(getChallengeType(slotId, blockNumber)) {
             // between
 
         } else {
             // after
-            require(Tx.prevBlock == coin.exit.exitBlock, "invalid reference");
+            require(txn.prevBlock == coin.exit.exitBlock, "invalid reference");
         }
 
         require(
-            inclusionCheck(Tx, childBlocks[blockNumber].root, proof),
+            inclusionCheck(txn, childBlocks[blockNumber].root, proof),
             "inclusion check failed");
 
         // reject exit
@@ -333,18 +325,16 @@ contract ParentBridge {
     /**
      * @dev Submit a merkle root of child chain blocks, by the operator.
      */
-    function submitBlock(bytes32 _root) external onlyOperator returns (uint256) {
+    function submitBlock(bytes32 _root) external onlyOwner {
         childBlocks[currentChildBlock] = ChildBlock({
             root: _root,
             timestamp: block.timestamp
         });
+        emit BlockSubmit(currentChildBlock, _root, block.timestamp);
 
         // update index
         currentChildBlock = currentChildBlock.add(CHILD_BLOCK_INTERVAL);
         currentDepositBlock = 1;
-        
-        emit BlockSubmit(_root, block.timestamp);
-        return currentChildBlock;
     }
 
     function isDepositBlock(uint256 _blockNumber) internal pure returns (bool) {
@@ -388,7 +378,24 @@ contract ParentBridge {
         );
     }
 
-    function getCoinByCount(uint64 count) public view returns (
+    function getExitBySlotId(uint64 slotId) public view returns (
+        address,
+        uint256,
+        address,
+        uint256,
+        uint256
+    ) {
+        Exit storage exitData = coins[slotId].exit;
+        return (
+            exitData.owner,
+            exitData.exitBlock,
+            exitData.prevOwner,
+            exitData.prevBlock,
+            exitData.createdAt
+        );
+    }
+
+    function getCoinByCount(uint64 count) external view returns (
         Type,
         address,
         uint256,

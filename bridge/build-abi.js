@@ -3,6 +3,7 @@
  */
 const fs = require('fs');
 const spawn = require('child_process').spawn;
+const uncamelize = str => str.replace(/(.)([A-Z]+)/g, (m, previous, uppers) => previous + ' ' + uppers.toLowerCase().split('').join(' ')).toLowerCase().replace(' ', '_');
 
 const TARGETS = ['ParentBridge', 'ChildBridge', 'ABLToken'];
 const TARGETS_DIR = './build';
@@ -26,15 +27,23 @@ TARGETS.forEach(target => {
     fs.writeFileSync(`${DEST}/${target}.bin`, bytecode);
 });
 
-// WARN: hardcoded build script
-const parentCommand = `-pkg contracts -type ParentBridge -abi ${DEST}/ParentBridge.abi -bin ${DEST}/ParentBridge.bin -out binds/parent_bridge.go`;
-const childCommand = `-pkg contracts -type ChildBridge -abi ${DEST}/ChildBridge.abi -bin ${DEST}/ChildBridge.bin -out binds/child_bridge.go`;
-const tokenCommand = `-pkg contracts -type ABLToken -abi ${DEST}/ABLToken.abi -bin ${DEST}/ABLToken.bin -out binds/abl_token.go`;
+async function abigen(targets, pkgName = 'contracts') {
+    for (const target of targets) {
+        const args = `-pkg ${pkgName} `
+            + `-type ${target} `
+            + `-abi ${DEST}/${target}.abi `
+            + `-bin ${DEST}/${target}.bin `
+            + `-out binds/${uncamelize(target)}.go`;
 
-spawn('abigen', parentCommand.split(' '), { stdio: 'inherit' }).on('exit', (code) => {
-    if (code !== 0) return;
-    spawn('abigen', childCommand.split(' '), { stdio: 'inherit' }).on('exit', (code) => {
-        if (code !== 0) return;
-        spawn('abigen', tokenCommand.split(' '), { stdio: 'inherit' }).on('exit', process.exit);
-    });
-});
+        await new Promise((resolve, reject) => {
+            spawn('abigen', args.split(' '), { stdio: 'inherit' })
+                .on('exit', code => {
+                    if (code !== 0) reject(new Error(`abigen exited with code ${code}`));
+                    resolve();
+                });
+        });
+    }
+}
+
+abigen(TARGETS).catch(err => console.error(err.stack));
+
