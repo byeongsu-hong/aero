@@ -19,21 +19,11 @@ contract ParentBridge {
     using Transaction for bytes;
     using ECRecovery for bytes32;
 
-    event Deposit(
-        uint64 indexed slotId,
-        address indexed depositor,
-        uint256 indexed depositBlockNumber,
-        address token,
-        uint256 amount
-    );
+    event Deposit(uint64 indexed slotId, address indexed owner, uint256 indexed blockNumber);
     event BlockSubmit(bytes32 root, uint256 timestamp);
     event ExitStarted(uint64 indexed slotId, address indexed owner);
     event ExitRejected(uint64 indexed slotId, address indexed claimer);
-    event ExitFinalized(
-        uint64 indexed slotId,
-        address indexed owner,
-        uint256 indexed amount
-    );
+    event ExitFinalized(uint64 indexed slotId, address indexed owner);
 
     enum Type {
         ERC20,
@@ -157,13 +147,7 @@ contract ParentBridge {
         coin.state = State.DEPOSITED;
 
         coinCount += 1;
-        emit Deposit(
-            slotId,
-            coin.owner,
-            coin.depositBlock,
-            coin.token,
-            coin.value
-        );
+        emit Deposit(slotId, coin.owner, coin.depositBlock);
     }
 
     function exit(
@@ -279,7 +263,7 @@ contract ParentBridge {
 
         // reject exit
         coin.state = State.DEPOSITED;
-        delete coin.exit;
+        delete coins[slotId].exit;
         emit ExitRejected(slotId, msg.sender);
     }
 
@@ -302,7 +286,17 @@ contract ParentBridge {
         return merkleTree.checkMembership(Tx.hash, root, Tx.slotId, proof);
     }
 
-    function finalize() public {
+    function finalize(uint64 slotId) public {
+        Coin storage coin = coins[slotId];
+
+        if (coin.state != State.EXITING) return;
+        if (block.number.sub(coin.exit.createdAt) <= CHALLENGE_PERIOD) return;
+
+        delete coins[slotId].exit;
+        emit ExitFinalized(slotId, coin.owner);
+    }
+
+    function finalizeMany(uint64[] slotIds) public {
 
     }
 

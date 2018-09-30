@@ -44,14 +44,15 @@ contract ChildBridge is Ownable {
         uint64 indexed slotId
     );
 
-    PeggedERC721 token;
+    PeggedERC721 public token;
 
     mapping (bytes32 => Txn) public transactions;
     mapping (uint256 => uint256) public lastBlockOf;
     bytes32[] public pendingTransactions;
 
-    constructor(PeggedERC721 _token) public {
-        token = _token;
+
+    constructor(string _name, string _symbol) public {
+        token = new PeggedERC721(_name, _symbol, this);
     }
 
     function createTransaction(
