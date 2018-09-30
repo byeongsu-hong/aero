@@ -162,6 +162,7 @@
   name = "github.com/frostornge/ethornge"
   packages = [
     "account",
+    "gorange",
     "provider",
     "utils"
   ]
@@ -434,6 +435,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "476a96ea8a74a1837dd445cd950af4fb27f3dcad0331b2a295b384270de046e3"
+  inputs-digest = "28a0b9cb2014b096146a16c2278ae5ae6e26176f3cbd32392bfbe9f99e8e9a56"
   solver-name = "gps-cdcl"
   solver-version = 1
