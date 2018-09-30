@@ -8,6 +8,7 @@ import "openzeppelin-solidity/contracts/token/ERC721/ERC721.sol";
 import "../OperatorRegistry.sol";
 import "../Transaction.sol";
 import "./SparseMerkleTree.sol";
+import "../utils/SafeMath64.sol";
 
 /**
  * @title ParentChain
@@ -16,6 +17,7 @@ import "./SparseMerkleTree.sol";
 contract ParentBridge {
     using SafeERC20 for ERC20;
     using SafeMath for uint256;
+    using SafeMath64 for uint64;
     using Transaction for bytes;
     using ECRecovery for bytes32;
 
@@ -69,6 +71,7 @@ contract ParentBridge {
     // constraints from Plasma MVP by OmiseGO
     uint256 public constant CHILD_BLOCK_INTERVAL = 1000;
     uint256 public constant CHALLENGE_PERIOD = 200; // no timestamp. no.
+    uint256 public constant MAX_ITERATION = 100;
 
     OperatorRegistry operatorRegistry;
     SparseMerkleTree merkleTree;
@@ -78,6 +81,7 @@ contract ParentBridge {
     uint64 public coinCount = 0;
 
     mapping (uint256 => ChildBlock) public childBlocks;
+    mapping (uint64 => uint64) coinRef;
     mapping (uint64 => Coin) coins;
 
     modifier onlyOperator() { require(operatorRegistry.isOperator(msg.sender)); _;}
@@ -146,6 +150,7 @@ contract ParentBridge {
         coin.value = amount;
         coin.state = State.DEPOSITED;
 
+        coinRef[coinCount] = slotId;
         coinCount += 1;
         emit Deposit(slotId, coin.owner, coin.depositBlock);
     }
@@ -305,7 +310,7 @@ contract ParentBridge {
     }
 
     function finalizeMany(uint64[] slotIds) public {
-        require(slotIds.length <= 256, "gas limit");
+        require(slotIds.length <= MAX_ITERATION, "gas limit");
         for(uint i = 0; i < slotIds.length; i++) {
             finalize(slotIds[i]);
         }
@@ -350,5 +355,59 @@ contract ParentBridge {
         view
         returns (bytes32, uint256) {
         return (childBlocks[_blockNumber].root, childBlocks[_blockNumber].timestamp);
+    }
+
+    function getCoin(uint64 slotId) external view returns (
+        Type,
+        address,
+        uint256,
+        uint256,
+        uint256,
+        State
+    ) {
+        Coin storage coin = coins[slotId];
+        return (
+            coin.typ,
+            coin.owner,
+            coin.value,
+            coin.depositBlock,
+            childBlocks[coin.depositBlock].timestamp,
+            coin.state
+        );
+    }
+
+    function getCoins(uint64 _start, uint64 _end) external view returns (
+        Type[],
+        address[],
+        uint256[],
+        uint256[],
+        uint256[],
+        State[]
+    ) {
+        require(_end <= coinCount, "no more coins");
+        require(_end.sub(_start) <= MAX_ITERATION, "gas limit");
+
+        uint256 arrlen = _end.sub(_start);
+        Type[] memory types = new Type[](arrlen);
+        address[] memory owners = new address[](arrlen);
+        uint256[] memory values = new uint256[](arrlen);
+        uint256[] memory blocks = new uint256[](arrlen);
+        uint256[] memory times = new uint256[](arrlen);
+        State[] memory states = new State[](arrlen);
+
+        uint64 j = 0;
+        for(uint64 i = _start; i < _end; i++) {
+            (types[j], owners[j], values[j], blocks[j], times[j], states[j]) = getCoin(coinRef[i]);
+            j++;
+        }
+
+        return (
+            types,
+            owners,
+            values,
+            blocks,
+            times,
+            states,
+        );
     }
 }
