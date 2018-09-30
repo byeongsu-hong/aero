@@ -407,7 +407,7 @@ contract ParentBridge {
             values,
             blocks,
             times,
-            states,
+            states
         );
     }
 }
