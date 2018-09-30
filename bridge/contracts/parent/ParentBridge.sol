@@ -384,7 +384,7 @@ contract ParentBridge {
         uint256,
         State
     ) {
-        return getCoinById(coinRef(count));
+        return getCoinBySlotId(coinRef[count]);
     }
 
 }
