@@ -61,7 +61,13 @@ func NewAero(
 	}, nil
 }
 
-func (aero *Aero) WaitParentTxToBeMined(tx *types.Transaction, timeout time.Duration) (*types.Receipt, error) {
+func (aero *Aero) WaitChildTxMined(tx *types.Transaction, timeout time.Duration) (*types.Receipt, error) {
+	timeoutContext, cancelTimeout := context.WithTimeout(context.Background(), timeout)
+	defer cancelTimeout()
+	return bind.WaitMined(timeoutContext, aero.Child, tx)
+}
+
+func (aero *Aero) WaitParentTxMined(tx *types.Transaction, timeout time.Duration) (*types.Receipt, error) {
 	timeoutContext, cancelTimeout := context.WithTimeout(context.Background(), timeout)
 	defer cancelTimeout()
 	return bind.WaitMined(timeoutContext, aero.Parent, tx)

@@ -3,13 +3,30 @@ package validator
 import (
 	"context"
 
+	"math/big"
+
+	"time"
+
 	"github.com/airbloc/aero/bridge/binds"
 	"github.com/airbloc/aero/core"
+	"github.com/ethereum/go-ethereum/accounts/abi/bind"
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/core/types"
+	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/log"
 )
 
+// TODO: manage confirmation by event queue
+const (
+	MinConfirm = 6
+)
+
 type Validator struct {
-	aero   *core.Aero
+	aero *core.Aero
+
+	// TODO: manage exits (finalize)
+	exits []uint64
+
 	ctx    context.Context
 	cancel context.CancelFunc
 }
@@ -17,9 +34,9 @@ type Validator struct {
 func New(aero *core.Aero) *Validator {
 	ctx, cancel := context.WithCancel(context.Background())
 	return &Validator{
-		aero,
-		ctx,
-		cancel,
+		aero:   aero,
+		ctx:    ctx,
+		cancel: cancel,
 	}
 }
 
@@ -56,12 +73,50 @@ func (v *Validator) Start() {
 		for {
 			select {
 			case evt := <-exitStarted:
-				log.Info("Exit started", "By", evt.Owner.Hex(), "Slot", evt.SlotId)
+				v.exits = append(v.exits, evt.SlotId)
+				log.Info("Validator: Exit started",
+					"By", evt.Owner.Hex(),
+					"Slot", evt.SlotId,
+				)
 			case evt := <-exitRejected:
-				log.Info("Exit rejected", "By", evt.Claimer.Hex(), "Slot", evt.SlotId)
+				for index, exit := range v.exits {
+					if evt.SlotId == exit {
+						v.exits = append(v.exits[:index], v.exits[index+1:]...)
+						break
+					}
+				}
+				log.Info("Validator: Exit rejected",
+					"By", evt.Claimer.Hex(),
+					"Slot", evt.SlotId,
+				)
 			case evt := <-exitFinalized:
-				log.Info("Exit Finalized", "By", evt.Owner.Hex(), "Slot", evt.SlotId)
+				for index, exit := range v.exits {
+					if evt.SlotId == exit {
+						v.exits = append(v.exits[:index], v.exits[index+1:]...)
+						break
+					}
+				}
+
+				tx, err := aero.ChildBridge.SubmitWithdraw(&bind.TransactOpts{
+					From:    crypto.PubkeyToAddress(aero.PrivateKey.PublicKey),
+					Context: context.Background(),
+					Signer: func(signer types.Signer, addresses common.Address, transaction *types.Transaction) (*types.Transaction, error) {
+						return types.SignTx(transaction, types.HomesteadSigner{}, aero.PrivateKey)
+					},
+				}, evt.Owner, evt.Token, evt.SlotId, big.NewInt(0), evt.Typ)
+				if err != nil {
+					log.Error("Validator:", "create tx error", err)
+				}
+				if _, err = aero.WaitChildTxMined(tx, 1*time.Minute); err != nil {
+					log.Error("Validator:", "deploy tx error", err)
+				}
+
+				log.Info("Validator: Exit Finalized",
+					"By", evt.Owner.Hex(),
+					"Slot", evt.SlotId,
+				)
 			case <-v.ctx.Done():
+				log.Info("Validator: Stopping...")
 				return
 			}
 		}
