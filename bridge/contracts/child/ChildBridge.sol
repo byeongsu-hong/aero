@@ -50,7 +50,6 @@ contract ChildBridge is Ownable {
     mapping (uint256 => uint256) public lastBlockOf;
     bytes32[] public pendingTransactions;
 
-
     constructor(string _name, string _symbol) public {
         token = new PeggedERC721(_name, _symbol, this);
     }
@@ -128,6 +127,26 @@ contract ChildBridge is Ownable {
         } else {
             PeggedERC721 token721 = PeggedERC721(parentToken);
             token721.addDepositTo(depositor, slotId);
+        }
+    }
+
+    function submitWithdraw(
+        address exitor,
+        address parentToken,
+        uint64 slotId,
+        uint256 amount,
+        Mode which
+    ) public onlyOwner {
+        require(
+            parentToken == address(token),
+            "Unregistered token.");
+
+        if (which == Mode.ERC20) {
+            PeggedERC20 token20 = PeggedERC20(parentToken);
+            token20.withdrawFrom(exitor, amount);
+        } else {
+            PeggedERC721 token721 = PeggedERC721(parentToken);
+            token721.withdrawFrom(exitor, slotId);
         }
     }
 

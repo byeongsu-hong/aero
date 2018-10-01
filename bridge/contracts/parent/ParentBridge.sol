@@ -22,7 +22,7 @@ contract ParentBridge is Ownable {
     event BlockSubmit(uint256 blockNumber, bytes32 root, uint256 timestamp);
     event ExitStarted(uint64 indexed slotId, address indexed owner);
     event ExitRejected(uint64 indexed slotId, address indexed claimer);
-    event ExitFinalized(uint64 indexed slotId, address indexed owner);
+    event ExitFinalized(uint64 indexed slotId, address indexed owner, address token, Type typ);
 
     enum Type {
         ERC20,
@@ -311,7 +311,7 @@ contract ParentBridge is Ownable {
 
             token721.safeTransferFrom(this, owner, data);
         }
-        emit ExitFinalized(slotId, coin.owner);
+        emit ExitFinalized(slotId, coin.owner, coin.token, coin.typ);
     }
 
     function finalizeMany(uint64[] slotIds) public {

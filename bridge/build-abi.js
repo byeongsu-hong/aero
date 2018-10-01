@@ -3,9 +3,9 @@
  */
 const fs = require('fs');
 const spawn = require('child_process').spawn;
-const uncamelize = str => str.replace('ABLToken', 'abl_token').replace(/(?:^|\.?)([A-Z])/g, (x,y) => "_" + y.toLowerCase()).replace(/^_/, "");
+const uncamelize = str => str.replace('ABLToken', 'abl_token').replace('ERC', '_erc').replace(/(?:^|\.?)([A-Z])/g, (x,y) => "_" + y.toLowerCase()).replace(/^_/, "");
 
-const TARGETS = ['ParentBridge', 'ChildBridge', 'ABLToken'];
+const TARGETS = ['ParentBridge', 'ChildBridge', 'ABLToken', "PeggedERC20", "PeggedERC721"];
 const TARGETS_DIR = './build';
 const DEST = './build/abi';
 
