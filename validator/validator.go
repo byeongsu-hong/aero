@@ -9,10 +9,6 @@ import (
 
 	"github.com/airbloc/aero/bridge/binds"
 	"github.com/airbloc/aero/core"
-	"github.com/ethereum/go-ethereum/accounts/abi/bind"
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/core/types"
-	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/log"
 )
 
@@ -97,13 +93,7 @@ func (v *Validator) Start() {
 					}
 				}
 
-				tx, err := aero.ChildBridge.SubmitWithdraw(&bind.TransactOpts{
-					From:    crypto.PubkeyToAddress(aero.PrivateKey.PublicKey),
-					Context: context.Background(),
-					Signer: func(signer types.Signer, addresses common.Address, transaction *types.Transaction) (*types.Transaction, error) {
-						return types.SignTx(transaction, types.HomesteadSigner{}, aero.PrivateKey)
-					},
-				}, evt.Owner, evt.Token, evt.SlotId, big.NewInt(0), evt.Typ)
+				tx, err := aero.ChildBridge.SubmitWithdraw(aero.ChildOpt, evt.Owner, evt.Token, evt.SlotId, big.NewInt(0), evt.Typ)
 				if err != nil {
 					log.Error("Validator:", "create tx error", err)
 				}

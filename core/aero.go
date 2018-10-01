@@ -9,6 +9,7 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
+	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/pkg/errors"
 )
@@ -26,7 +27,8 @@ type Aero struct {
 	ParentBridgeAddr common.Address
 
 	// private key of the account
-	PrivateKey *ecdsa.PrivateKey
+	ChildOpt  *bind.TransactOpts
+	ParentOpt *bind.TransactOpts
 }
 
 // NewAero connects to given blockchains
@@ -38,7 +40,8 @@ func NewAero(
 	childBridgeAddr common.Address,
 	parentBridge *contracts.ParentBridge,
 	parentBridgeAddr common.Address,
-	privateKey *ecdsa.PrivateKey,
+	childAccount *ecdsa.PrivateKey,
+	parentAccount *ecdsa.PrivateKey,
 ) (*Aero, error) {
 	// connect to blockchains
 	child, err := ethclient.Dial(childUri)
@@ -51,13 +54,28 @@ func NewAero(
 	}
 
 	return &Aero{
-		Child:            child,
-		Parent:           parent,
+		Child:  child,
+		Parent: parent,
+
 		ChildBridge:      childBridge,
 		ChildBridgeAddr:  childBridgeAddr,
 		ParentBridge:     parentBridge,
 		ParentBridgeAddr: parentBridgeAddr,
-		PrivateKey:       privateKey,
+
+		ChildOpt: &bind.TransactOpts{
+			From:    crypto.PubkeyToAddress(childAccount.PublicKey),
+			Context: context.Background(),
+			Signer: func(signer types.Signer, addresses common.Address, transaction *types.Transaction) (*types.Transaction, error) {
+				return types.SignTx(transaction, types.HomesteadSigner{}, childAccount)
+			},
+		},
+		ParentOpt: &bind.TransactOpts{
+			From:    crypto.PubkeyToAddress(parentAccount.PublicKey),
+			Context: context.Background(),
+			Signer: func(signer types.Signer, addresses common.Address, transaction *types.Transaction) (*types.Transaction, error) {
+				return types.SignTx(transaction, types.HomesteadSigner{}, parentAccount)
+			},
+		},
 	}, nil
 }
 
