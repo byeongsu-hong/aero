@@ -12,7 +12,7 @@ const mocha = process.env.GAS_REPORTER ? mochaGasSettings : {};
 module.exports = {
     networks: {
         child: {
-            network_id: 76,
+            network_id: 2470,
             host: 'localhost',
             port: 7600,
             gas: 400000,

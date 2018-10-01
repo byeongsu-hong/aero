@@ -18,7 +18,7 @@ contract ParentBridge is Ownable {
     using Transaction for bytes;
     using ECRecovery for bytes32;
 
-    event Deposit(uint64 indexed slotId, address indexed owner, uint256 indexed blockNumber);
+    event Deposit(uint64 indexed slotId, address indexed owner, uint256 blockNumber);
     event BlockSubmit(uint256 blockNumber, bytes32 root, uint256 timestamp);
     event ExitStarted(uint64 indexed slotId, address indexed owner);
     event ExitRejected(uint64 indexed slotId, address indexed claimer);
@@ -82,6 +82,7 @@ contract ParentBridge is Ownable {
 
     constructor() public {
         merkleTree = new SparseMerkleTree();
+        currentChildBlock = CHILD_BLOCK_INTERVAL;
     }
 
     // User-side actions
