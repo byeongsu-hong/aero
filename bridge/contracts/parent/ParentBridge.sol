@@ -284,11 +284,13 @@ contract ParentBridge is Ownable {
         return merkleTree.checkMembership(Tx.hash, root, Tx.slotId, proof);
     }
 
-    function finalize(uint64 slotId) public {
+    function finalize(uint64 slotId, uint256 blockNumber) public {
         Coin storage coin = coins[slotId];
 
         if (coin.state != State.EXITING) return;
-        if (block.number.sub(coin.exit.createdAt) <= CHALLENGE_PERIOD) return;
+        // for test
+        if (blockNumber.sub(coin.exit.createdAt) <= CHALLENGE_PERIOD) return;
+//        if (block.number.sub(coin.exit.createdAt) <= CHALLENGE_PERIOD) return;
 
         coin.state = State.EXITED;
         coin.owner = coin.exit.owner;
@@ -317,7 +319,7 @@ contract ParentBridge is Ownable {
     function finalizeMany(uint64[] slotIds) public {
         require(slotIds.length <= MAX_ITERATION, "gas limit");
         for(uint i = 0; i < slotIds.length; i++) {
-            finalize(slotIds[i]);
+            finalize(slotIds[i], block.number);
         }
     }
 
