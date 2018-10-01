@@ -116,16 +116,16 @@ contract ChildBridge is Ownable {
         uint256 amount,
         Mode which
     ) public onlyOwner {
-        require(
-            parentToken == address(token),
-            "Unregistered token.");
+//        require(
+//            parentToken == address(token),
+//            "Unregistered token.");
 
         // mint deposits to the depositor.
         if (which == Mode.ERC20) {
-            PeggedERC20 token20 = PeggedERC20(parentToken);
+            PeggedERC20 token20 = PeggedERC20(token);
             token20.addDepositTo(depositor, amount);
         } else {
-            PeggedERC721 token721 = PeggedERC721(parentToken);
+            PeggedERC721 token721 = PeggedERC721(token);
             token721.addDepositTo(depositor, slotId);
         }
     }
@@ -137,15 +137,15 @@ contract ChildBridge is Ownable {
         uint256 amount,
         Mode which
     ) public onlyOwner {
-        require(
-            parentToken == address(token),
-            "Unregistered token.");
+//        require(
+//            parentToken == address(token),
+//            "Unregistered token.");
 
         if (which == Mode.ERC20) {
-            PeggedERC20 token20 = PeggedERC20(parentToken);
+            PeggedERC20 token20 = PeggedERC20(token);
             token20.withdrawFrom(exitor, amount);
         } else {
-            PeggedERC721 token721 = PeggedERC721(parentToken);
+            PeggedERC721 token721 = PeggedERC721(token);
             token721.withdrawFrom(exitor, slotId);
         }
     }

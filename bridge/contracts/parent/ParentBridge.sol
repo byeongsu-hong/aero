@@ -108,7 +108,7 @@ contract ParentBridge is Ownable {
         uint256 value
     ) public {
         token.safeTransferFrom(from, address(this), value);
-        deposit(Type.ERC20, token, from, 0, value);
+        deposit(Type.ERC20, token, from, value, value);
     }
 
     function deposit(
