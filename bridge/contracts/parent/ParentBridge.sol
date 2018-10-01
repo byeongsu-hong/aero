@@ -18,7 +18,7 @@ contract ParentBridge is Ownable {
     using Transaction for bytes;
     using ECRecovery for bytes32;
 
-    event Deposit(uint64 indexed slotId, address indexed owner, uint256 blockNumber);
+    event Deposit(uint64 indexed slotId, address indexed owner, address token, uint256 amount);
     event BlockSubmit(uint256 blockNumber, bytes32 root, uint256 timestamp);
     event ExitStarted(uint64 indexed slotId, address indexed owner);
     event ExitRejected(uint64 indexed slotId, address indexed claimer);
@@ -145,7 +145,7 @@ contract ParentBridge is Ownable {
 
         coinRef[coinCount] = slotId;
         coinCount += 1;
-        emit Deposit(slotId, coin.owner, coin.depositBlock);
+        emit Deposit(slotId, coin.owner, coin.token, coin.value);
     }
 
     function exit(

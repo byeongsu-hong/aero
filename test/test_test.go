@@ -5,11 +5,14 @@ import (
 	"os"
 	"testing"
 
+	"time"
+
 	"github.com/airbloc/aero/bridge/binds"
 	"github.com/airbloc/aero/core"
 	"github.com/airbloc/aero/operator"
 	"github.com/airbloc/aero/validator"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/frostornge/ethornge/account"
 	"github.com/frostornge/ethornge/gorange"
@@ -17,13 +20,6 @@ import (
 	"github.com/frostornge/ethornge/utils"
 	"github.com/stretchr/testify/assert"
 )
-
-type contractInfo struct {
-	child      *contracts.ChildBridge
-	childAddr  common.Address
-	parent     *contracts.ParentBridge
-	parentAddr common.Address
-}
 
 func launchTestChain(
 	t *testing.T,
@@ -91,10 +87,13 @@ func deployContracts(
 	*contracts.ParentBridge,
 	common.Address,
 ) {
-	cAddr, _, childBridge, err := contracts.DeployChildBridge(child.Accounts[0], child, "Airbloc Plasma", "ABLP")
+	cAddr, cTx, childBridge, err := contracts.DeployChildBridge(child.Accounts[0], child, "Airbloc Plasma", "ABLP")
 	assert.NoError(t, err)
-	pAddr, _, parentBridge, err := contracts.DeployParentBridge(parent.Accounts[0], parent)
+	pAddr, pTx, parentBridge, err := contracts.DeployParentBridge(parent.Accounts[0], parent)
 	assert.NoError(t, err)
+
+	child.WaitDeployedWithTimeout(cTx, 1*time.Minute)
+	parent.WaitDeployedWithTimeout(pTx, 1*time.Minute)
 
 	return childBridge, cAddr, parentBridge, pAddr
 }
@@ -114,15 +113,24 @@ func TestAero(t *testing.T) {
 	child, parent := launchTestChain(t, keys)
 	defer child.Stop()
 	defer parent.Stop()
-	log.Info("launch")
+	log.Info("Test Launch",
+		"child", child.WSEndpoint(),
+		"parent", parent.WSEndpoint(),
+	)
 
 	childPv, parentPv := getProviders(t, keys, child, parent)
 	defer childPv.Close()
 	defer parentPv.Close()
-	log.Info("providers")
+	log.Info("Test Providers",
+		"child owner", childPv.Accounts[0].From.Hex(),
+		"parent owner", parentPv.Accounts[0].From.Hex(),
+	)
 
 	childBridge, childAddr, parentBridge, parentAddr := deployContracts(t, childPv, parentPv)
-	log.Info("contracts")
+	log.Info("Test Contracts",
+		"child bridge", childAddr.Hex(),
+		"parent bridge", parentAddr.Hex(),
+	)
 
 	aero, err := core.NewAero(
 		"ws://"+child.WSEndpoint(),
@@ -132,29 +140,48 @@ func TestAero(t *testing.T) {
 		keys[0].PrivateKey,
 	)
 	assert.NoError(t, err)
-	log.Info("aero")
+	log.Info("Test Aero",
+		"privKey", "0x"+common.Bytes2Hex(crypto.FromECDSA(keys[0].PrivateKey)))
 
 	op := operator.New(aero)
 	op.Start()
 	defer op.Stop()
-	log.Info("operator")
+	log.Info("Test Start Operator")
 
 	// does nothing at this time
 	va := validator.New(aero)
 	va.Start()
 	defer va.Stop()
-	log.Info("validator")
+	log.Info("Test Start Validator")
 
-	tAddr, _, tToken, err := contracts.DeployABLToken(childPv.Accounts[0], childPv)
+	pOwner := parentPv.Accounts[0]
+	//pParty := parentPv.Accounts[1:]
+	//cOwner := childPv.Accounts[0]
+	//cParty := childPv.Accounts[1:]
+
+	tAddr, tx, tToken, err := contracts.DeployABLToken(pOwner, parentPv)
 	assert.NoError(t, err)
+	parentPv.WaitDeployedWithTimeout(tx, 1*time.Minute)
 
-	tToken.Approve()
+	tx, err = tToken.Approve(pOwner, parentAddr, utils.Ether(100))
+	assert.NoError(t, err)
+	parentPv.WaitMinedWithTimeout(tx, 1*time.Minute)
 
-	tx, err := parentBridge.DepositFungible(
-		childPv.Accounts[0],
-		tAddr,
-		childPv.Accounts[0].From,
-		utils.Ether(100),
+	alt, _ := tToken.Allowance(nil, pOwner.From, parentAddr)
+	log.Info("Test Token Approved",
+		"from", pOwner.From.Hex(),
+		"to", parentAddr.Hex(),
+		"amount", utils.WeiToEth(alt),
 	)
+
+	tx, err = parentBridge.DepositFungible(pOwner, tAddr, pOwner.From, utils.Ether(100))
 	assert.NoError(t, err)
+	parentPv.WaitMinedWithTimeout(tx, 1*time.Minute)
+	log.Info("Test Deposit Token",
+		"from", pOwner.From.Hex(),
+		"to", tAddr.Hex(),
+		"amount", 100,
+	)
+
+	time.Sleep(1 * time.Minute)
 }

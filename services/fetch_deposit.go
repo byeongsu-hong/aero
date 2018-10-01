@@ -14,7 +14,7 @@ func FetchDeposits(aero *core.Aero, startBlock uint64, endBlock uint64) error {
 		End:   &endBlock,
 	}
 
-	it, err := aero.ParentBridge.FilterDeposit(filterOpts, nil, nil, nil)
+	it, err := aero.ParentBridge.FilterDeposit(filterOpts, nil, nil)
 	if err != nil {
 		return errors.Wrap(err, "failed to filter deposit log from ParentChain")
 	}
@@ -39,10 +39,10 @@ func FetchDeposits(aero *core.Aero, startBlock uint64, endBlock uint64) error {
 
 func reportDeposit(aero *core.Aero, event *contracts.ParentBridgeDeposit) error {
 	auth := bind.NewKeyedTransactor(aero.PrivateKey)
-	tx, err := aero.ChildBridge.SubmitDeposit(auth, event.Depositor, event.Token, uint64(0), event.Amount, 0) // TODO: temp fill
+	tx, err := aero.ChildBridge.SubmitDeposit(auth, event.Owner, event.Token, uint64(0), event.Amount, 0) // TODO: temp fill
 	if err != nil {
 		return err
 	}
-	log.Debug("submitDeposit(%s, %d) -> %s", event.Depositor.Hex(), event.Amount.Int64(), tx.Hash().Hex())
+	log.Debug("submitDeposit(%s, %s) -> %s", event.Owner.Hex(), event.Amount.String(), tx.Hash().Hex())
 	return nil
 }
