@@ -1,20 +1,19 @@
 package services
 
 import (
+	"github.com/airbloc/aero/bridge/binds"
 	"github.com/airbloc/aero/core"
-	"github.com/airbloc/aero/contracts/binds"
-	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/pkg/errors"
 )
 
 func FetchDeposits(aero *core.Aero, startBlock uint64, endBlock uint64) error {
-	filterOpts := &bind.FilterOpts{
-		Start: startBlock,
-		End:   &endBlock,
-	}
+	//filterOpts := &bind.FilterOpts{
+	//	Start: startBlock,
+	//	End:   &endBlock,
+	//}
 
-	it, err := aero.ParentBridge.FilterDeposit(filterOpts, nil, nil)
+	it, err := aero.ParentBridge.FilterDeposit(nil, nil, nil)
 	if err != nil {
 		return errors.Wrap(err, "failed to filter deposit log from ParentChain")
 	}
@@ -37,12 +36,11 @@ func FetchDeposits(aero *core.Aero, startBlock uint64, endBlock uint64) error {
 	return nil
 }
 
-func reportDeposit(aero *core.Aero, event *contracts.ParentChainDeposit) error {
-	auth := bind.NewKeyedTransactor(aero.PrivateKey)
-	tx, err := aero.ChildBridge.SubmitDeposit(auth, event.Depositor, event.Token, uint64(0), event.Amount, 0) // TODO: temp fill
+func reportDeposit(aero *core.Aero, event *contracts.ParentBridgeDeposit) error {
+	tx, err := aero.ChildBridge.SubmitDeposit(aero.ChildOpt, event.Owner, event.Token, uint64(0), event.Amount, 0) // TODO: temp fill
 	if err != nil {
 		return err
 	}
-	log.Debug("submitDeposit(%s, %d) -> %s", event.Depositor.Hex(), event.Amount.Int64(), tx.Hash().Hex())
+	log.Info("submitDeposit(%s, %s) -> %s", event.Owner.Hex(), event.Amount.String(), tx.Hash().Hex())
 	return nil
 }

@@ -1,7 +1,7 @@
 pragma solidity ^0.4.24;
 
 import "../utils/ERC20.sol";
-import "./Pegger.sol";
+import "./ChildBridge.sol";
 
 /**
  * @title PeggedERC20
@@ -11,9 +11,9 @@ import "./Pegger.sol";
 contract PeggedERC20 is ERC20 {
 
     // an address of the bridge contract on child chain (Pegger.sol)
-    Pegger public bridge;
+    ChildBridge public bridge;
 
-    constructor(Pegger _bridge) public {
+    constructor(ChildBridge _bridge) public {
         bridge = _bridge;
     }
 

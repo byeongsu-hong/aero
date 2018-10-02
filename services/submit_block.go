@@ -1,11 +1,12 @@
 package services
 
 import (
+	"math/big"
+	"time"
+
 	"github.com/airbloc/aero/core"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/log"
-	"math/big"
-	"time"
 )
 
 func SubmitBlock(aero *core.Aero) error {
@@ -60,7 +61,7 @@ func submitToRoot(aero *core.Aero, block *core.PlasmaBlock) (receipt *types.Rece
 	if err != nil {
 		return
 	}
-	receipt, err = aero.WaitParentTxToBeMined(tx, 1*time.Minute)
+	receipt, err = aero.WaitParentTxMined(tx, 1*time.Minute)
 	if err != nil {
 		return
 	}

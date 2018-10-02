@@ -10,7 +10,7 @@ import "./PeggedERC721.sol";
  * @dev A ERC721 Pegger,
  * which is a proof-of-concept implementation of the higher-level Plasma Cash.
  */
-contract Pegger is Ownable {
+contract ChildBridge is Ownable {
     using SafeMath for uint256;
     using ECRecovery for bytes32;
 
@@ -44,40 +44,43 @@ contract Pegger is Ownable {
         uint64 indexed slotId
     );
 
-    PeggedERC721 token;
+    PeggedERC721 public token;
 
     mapping (bytes32 => Txn) public transactions;
     mapping (uint256 => uint256) public lastBlockOf;
     bytes32[] public pendingTransactions;
 
-    constructor(PeggedERC721 _token) public {
-        token = _token;
+    constructor(string _name, string _symbol) public {
+        token = new PeggedERC721(_name, _symbol, this);
     }
 
-    function createTransaction(address from, address to, uint64 slotId) public returns (bytes32 txnHash) {
+    function createTransaction(
+        address from,
+        address to,
+        uint64 slotId
+    ) public returns (bytes32) {
         // TODO: max transaction limit
         require(msg.sender == address(token), "Direct call is not allowed.");
 
-        // build transaction data
-        Txn memory txn;
+        // calculate hash by constructing an naive RLP encoding of the transaction.
+        bytes memory rlp = abi.encodePacked(
+            bytes2(0xf857),
+            bytes1(0x88), slotId,
+            bytes1(0xa0), lastBlockOf[slotId],
+            bytes1(0x94), to // newOwner
+        );
+        bytes32 txnHash = keccak256(rlp);
+
+        // save the transaction.
+        // NOTE THAT txn.signature could be further provided by the client.
+        Txn storage txn = transactions[txnHash];
         txn.slotId = slotId;
         txn.prevBlock = lastBlockOf[slotId];
         txn.newOwner = to;
         txn.owner = from;
 
-        // calculate hash by constructing an naive RLP encoding of the transaction.
-        bytes memory rlp = abi.encodePacked(
-            bytes2(0xf857),
-            bytes1(0x88), txn.slotId,
-            bytes1(0xa0), txn.prevBlock,
-            bytes1(0x94), txn.newOwner
-        );
-        txnHash = keccak256(rlp);
-
-        // save the transaction.
-        // NOTE THAT txn.signature could be further provided by the client.
-        transactions[txnHash] = txn;
         pendingTransactions.push(txnHash);
+        return txnHash;
     }
 
     function saveWitness(bytes32 txnHash, bytes signature) public {
@@ -106,18 +109,44 @@ contract Pegger is Ownable {
      * @dev Submit deposit event of ERC20 / ERC721 token from the parent chain,
      * and creates a deposit block.
      */
-    function submitDeposit(address depositor, address parentToken, uint64 slotId, uint256 amount, Mode which) public onlyOwner {
-        require(
-            parentToken == address(token),
-            "Unregistered token.");
+    function submitDeposit(
+        address depositor,
+        address parentToken,
+        uint64 slotId,
+        uint256 amount,
+        Mode which
+    ) public onlyOwner {
+//        require(
+//            parentToken == address(token),
+//            "Unregistered token.");
 
         // mint deposits to the depositor.
         if (which == Mode.ERC20) {
-            PeggedERC20 token20 = PeggedERC20(parentToken);
+            PeggedERC20 token20 = PeggedERC20(token);
             token20.addDepositTo(depositor, amount);
         } else {
-            PeggedERC721 token721 = PeggedERC721(parentToken);
+            PeggedERC721 token721 = PeggedERC721(token);
             token721.addDepositTo(depositor, slotId);
+        }
+    }
+
+    function submitWithdraw(
+        address exitor,
+        address parentToken,
+        uint64 slotId,
+        uint256 amount,
+        Mode which
+    ) public onlyOwner {
+//        require(
+//            parentToken == address(token),
+//            "Unregistered token.");
+
+        if (which == Mode.ERC20) {
+            PeggedERC20 token20 = PeggedERC20(token);
+            token20.withdrawFrom(exitor, amount);
+        } else {
+            PeggedERC721 token721 = PeggedERC721(token);
+            token721.withdrawFrom(exitor, slotId);
         }
     }
 

@@ -4,19 +4,25 @@ import (
 	"crypto/ecdsa"
 	"crypto/rand"
 	"fmt"
+	"os"
+	"runtime"
+
+	"context"
+
+	"time"
+
+	"github.com/airbloc/aero/bridge/binds"
 	"github.com/airbloc/aero/core"
 	"github.com/airbloc/aero/operator"
-	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	ethutils "github.com/ethereum/go-ethereum/cmd/utils"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/eth"
-	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/ethereum/go-ethereum/log"
+	"github.com/ethereum/go-ethereum/node"
+	"github.com/frostornge/ethornge/gorange"
 	"github.com/frostornge/ethornge/utils"
 	"gopkg.in/urfave/cli.v1"
-	"os"
-	"runtime"
 )
 
 func newApp() *cli.App {
@@ -108,13 +114,25 @@ func startNode(ctx *cli.Context) error {
 		return fmt.Errorf("failed to start mining: %v", err)
 	}
 
+	childBridge, childBridgeAddr, parentBridge, err := deployContract(
+		stack,
+		common.HexToAddress(
+			ctx.String("parent_bridge"),
+		),
+	)
+	if err != nil {
+		return fmt.Errorf("failed to deploy contract: %v", err)
+	}
+
 	privateKey, _ := ecdsa.GenerateKey(crypto.S256(), rand.Reader)
 
 	// setup aero
 	aero, err := core.NewAero(
 		"ws://"+stack.WSEndpoint(),
 		ctx.String("parent"),
-		common.HexToAddress("0x00000000000000000000"),
+		childBridge,
+		childBridgeAddr,
+		parentBridge,
 		common.HexToAddress(ctx.String("parent_bridge")),
 		privateKey,
 	)
@@ -130,6 +148,37 @@ func startNode(ctx *cli.Context) error {
 	stack.Wait()
 
 	return nil
+}
+
+func deployContract(stack *node.Node, parentAddr common.Address) (
+	*contracts.ChildBridge,
+	common.Address,
+	*contracts.ParentBridge,
+	error,
+) {
+	node := gorange.Node{*stack}
+	pv, err := node.WsProvider(context.Background())
+	if err != nil {
+		return nil, common.Address{}, nil, err
+	}
+
+	addr, tx, child, err := contracts.DeployChildBridge(
+		pv.Accounts[0],
+		pv,
+		"Airbloc Plasma",
+		"ABLP",
+	)
+	if err != nil {
+		return nil, common.Address{}, nil, err
+	}
+
+	_, err = pv.WaitDeployedWithTimeout(tx, 5*time.Minute)
+	if err != nil {
+		return nil, common.Address{}, nil, err
+	}
+
+	parent, err := contracts.NewParentBridge(parentAddr, pv)
+	return child, addr, parent, err
 }
 
 func main() {
