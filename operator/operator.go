@@ -3,9 +3,7 @@ package operator
 import (
 	"context"
 
-	"math/big"
-
-	"time"
+	"fmt"
 
 	"github.com/airbloc/aero/bridge/binds"
 	"github.com/airbloc/aero/core"
@@ -15,9 +13,7 @@ import (
 )
 
 const (
-	// chainHeadChanSize is the size of channel listening to ChainHeadEvent.
-	chainHeadChanSize = 10
-	minConfirmations  = 3
+	blockInterval = 3
 )
 
 type Operator struct {
@@ -38,23 +34,26 @@ func New(aero *core.Aero) *Operator {
 
 func (operator *Operator) Start() {
 	go func(aero *core.Aero) {
-
-		//newParentBlock := make(chan *types.Header, chainHeadChanSize)
-		//newParentBlockSub, err := aero.Parent.SubscribeNewHead(context.Background(), newParentBlock)
-		//if err != nil {
-		//	log.Error("failed to subscribe to parent block event", err.Error())
-		//	return
-		//}
-		//defer newParentBlockSub.Unsubscribe()
-
+		exit := make(chan *contracts.ParentBridgeExitFinalized)
 		deposit := make(chan *contracts.ParentBridgeDeposit)
-		newChildBlock := make(chan *types.Header, chainHeadChanSize)
+		newChildBlock := make(chan *types.Header)
+		defer close(exit)
+		defer close(deposit)
+		defer close(newChildBlock)
 
 		depositSub, err := aero.ParentBridge.WatchDeposit(nil, deposit, nil, nil)
 		if err != nil {
 			log.Error("Operator: failed to watch deposit event", "err", err.Error())
+			return
 		}
 		defer depositSub.Unsubscribe()
+
+		exitSub, err := aero.ParentBridge.WatchExitFinalized(nil, exit, nil, nil)
+		if err != nil {
+			log.Error("Operator: failed to watch exit-finalized event", "err", err.Error())
+			return
+		}
+		defer exitSub.Unsubscribe()
 
 		newChildBlockSub, err := aero.Child.SubscribeNewHead(context.Background(), newChildBlock)
 		if err != nil {
@@ -63,37 +62,45 @@ func (operator *Operator) Start() {
 		}
 		defer newChildBlockSub.Unsubscribe()
 
+		events := make(chan []interface{})
+		queue := services.NewQueue(events)
+		queue.Run(aero.Parent.Client)
+		defer queue.Close()
+
 		for {
+			// parent chain
 			select {
-			//case head := <-newParentBlock:
-			//	log.Info("Operator: new parent block",
-			//		"number", head.Number,
-			//		"txRoot", head.Root.Hex(),
-			//	)
-			//	services.FetchDeposits(
-			//		aero,
-			//		head.Number.Uint64()-(minConfirmations*2+1),
-			//		head.Number.Uint64()-(minConfirmations-1),
-			//	)
 			case evt := <-deposit:
 				log.Info("Operator: deposit",
 					"owner", evt.Owner.Hex(),
 					"slotId", evt.SlotId,
 				)
+				queue.Push(evt)
+			case evt := <-exit:
+				log.Info("Operator: exit",
+					"owner", evt.Owner.Hex(),
+					"slotId", evt.SlotId,
+					"token", fmt.Sprintln(evt.Token.Hex(), "(Type = ", evt.Typ, ")"))
+				queue.Push(evt)
+			case task := <-events:
+				submitParentEvent(aero, task)
+			default:
+			}
 
-				tx, err := aero.ChildBridge.SubmitDeposit(aero.ChildOpt, evt.Owner, evt.Token, evt.SlotId, big.NewInt(0), 1)
-				if err != nil {
-					log.Error("Operator:", "create tx error", err)
-				}
-				if _, err = aero.WaitChildTxMined(tx, 1*time.Minute); err != nil {
-					log.Error("Operator:", "deploy tx error", err)
-				}
+			// child chain
+			select {
 			case <-newChildBlock:
 				log.Info("Operator: new child block")
-				services.SubmitBlock(aero)
+				submitChildEvent(aero)
+			default:
+			}
 
+			// done
+			select {
 			case <-operator.ctx.Done():
+				log.Info("Operator: closing")
 				return
+			default:
 			}
 		}
 	}(operator.aero)

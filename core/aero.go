@@ -11,24 +11,21 @@ import (
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
+	"github.com/frostornge/ethornge/provider"
 	"github.com/pkg/errors"
 )
 
 // Aero is the context of the Aero framework.
 type Aero struct {
 	// connection to both chain
-	Child  *ethclient.Client
-	Parent *ethclient.Client
+	Child  *provider.Provider
+	Parent *provider.Provider
 
 	// binding of Bridge Contracts
 	ChildBridge      *contracts.ChildBridge
 	ChildBridgeAddr  common.Address
 	ParentBridge     *contracts.ParentBridge
 	ParentBridgeAddr common.Address
-
-	// private key of the account
-	ChildOpt  *bind.TransactOpts
-	ParentOpt *bind.TransactOpts
 }
 
 // NewAero connects to given blockchains
@@ -54,29 +51,43 @@ func NewAero(
 	}
 
 	return &Aero{
-		Child:  child,
-		Parent: parent,
-
+		Child: &provider.Provider{
+			Client:  child,
+			Context: context.Background(),
+			Accounts: []*bind.TransactOpts{
+				{
+					From:    crypto.PubkeyToAddress(childAccount.PublicKey),
+					Context: context.Background(),
+					Signer: func(signer types.Signer, addresses common.Address, transaction *types.Transaction) (*types.Transaction, error) {
+						return types.SignTx(transaction, types.EIP155Signer{}, childAccount)
+					},
+				},
+			},
+		},
+		Parent: &provider.Provider{
+			Client:  parent,
+			Context: context.Background(),
+			Accounts: []*bind.TransactOpts{
+				{
+					From:    crypto.PubkeyToAddress(parentAccount.PublicKey),
+					Context: context.Background(),
+					Signer: func(signer types.Signer, addresses common.Address, transaction *types.Transaction) (*types.Transaction, error) {
+						return types.SignTx(transaction, types.EIP155Signer{}, parentAccount)
+					},
+				},
+			},
+		},
 		ChildBridge:      childBridge,
 		ChildBridgeAddr:  childBridgeAddr,
 		ParentBridge:     parentBridge,
 		ParentBridgeAddr: parentBridgeAddr,
-
-		ChildOpt: &bind.TransactOpts{
-			From:    crypto.PubkeyToAddress(childAccount.PublicKey),
-			Context: context.Background(),
-			Signer: func(signer types.Signer, addresses common.Address, transaction *types.Transaction) (*types.Transaction, error) {
-				return types.SignTx(transaction, types.HomesteadSigner{}, childAccount)
-			},
-		},
-		ParentOpt: &bind.TransactOpts{
-			From:    crypto.PubkeyToAddress(parentAccount.PublicKey),
-			Context: context.Background(),
-			Signer: func(signer types.Signer, addresses common.Address, transaction *types.Transaction) (*types.Transaction, error) {
-				return types.SignTx(transaction, types.HomesteadSigner{}, parentAccount)
-			},
-		},
 	}, nil
+}
+
+func (aero *Aero) Close() {
+	aero.Child.Close()
+	aero.Parent.Close()
+
 }
 
 func (aero *Aero) WaitChildTxMined(tx *types.Transaction, timeout time.Duration) (*types.Receipt, error) {

@@ -1,4 +1,4 @@
-package services
+package operator
 
 import (
 	"math/big"
@@ -9,7 +9,7 @@ import (
 	"github.com/ethereum/go-ethereum/log"
 )
 
-func SubmitBlock(aero *core.Aero) error {
+func submitChildEvent(aero *core.Aero) error {
 	pendingTxnCount, err := aero.ChildBridge.GetPendingTransactionCount(nil)
 	if err != nil {
 		log.Error("Failed to get pending transaction count from ChildChain", "err", err)
@@ -23,7 +23,6 @@ func SubmitBlock(aero *core.Aero) error {
 	// gather plasma transaction data
 	transactions := make([]*core.PlasmaTx, pendingTxnCount.Int64())
 	for i := int64(0); i < pendingTxnCount.Int64(); i++ {
-		// TODO: big.Int
 		txnHash, err := aero.ChildBridge.PendingTransactions(nil, big.NewInt(i))
 		if err != nil {
 			log.Error("Failed to get Plasma Txn hash", "err", err)
@@ -65,5 +64,6 @@ func submitToRoot(aero *core.Aero, block *core.PlasmaBlock) (receipt *types.Rece
 	if err != nil {
 		return
 	}
+	log.Info("Operator: Block summitted")
 	return
 }

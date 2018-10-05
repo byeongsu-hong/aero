@@ -93,7 +93,7 @@ func (v *Validator) Start() {
 					}
 				}
 
-				tx, err := aero.ChildBridge.SubmitWithdraw(aero.ChildOpt, evt.Owner, evt.Token, evt.SlotId, big.NewInt(0), evt.Typ)
+				tx, err := aero.ChildBridge.SubmitWithdraw(aero.Child.Accounts[0], evt.Owner, evt.Token, evt.SlotId, big.NewInt(0), evt.Typ)
 				if err != nil {
 					log.Error("Validator:", "create tx error", err)
 				}

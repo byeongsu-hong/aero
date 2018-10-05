@@ -135,6 +135,7 @@ func startNode(ctx *cli.Context) error {
 		parentBridge,
 		common.HexToAddress(ctx.String("parent_bridge")),
 		privateKey,
+		privateKey,
 	)
 	if err != nil {
 		return fmt.Errorf("failed to initialize Aero : %v", err)
@@ -142,7 +143,7 @@ func startNode(ctx *cli.Context) error {
 
 	// start operator
 	op := operator.New(aero)
-	go op.Start()
+	op.Start()
 
 	// wait for termination :P
 	stack.Wait()

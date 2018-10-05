@@ -18,11 +18,11 @@ contract ParentBridge is Ownable {
     using Transaction for bytes;
     using ECRecovery for bytes32;
 
-    event Deposit(uint64 indexed slotId, address indexed owner, address token, uint256 amount);
+    event Deposit(uint64 indexed slotId, address indexed owner, address token, uint256 amount, Type typ);
     event BlockSubmit(uint256 blockNumber, bytes32 root, uint256 timestamp);
     event ExitStarted(uint64 indexed slotId, address indexed owner);
     event ExitRejected(uint64 indexed slotId, address indexed claimer);
-    event ExitFinalized(uint64 indexed slotId, address indexed owner, address token, Type typ);
+    event ExitFinalized(uint64 indexed slotId, address indexed owner, address token, uint256 amount, Type typ);
 
     enum Type {
         ERC20,
@@ -145,7 +145,7 @@ contract ParentBridge is Ownable {
 
         coinRef[coinCount] = slotId;
         coinCount += 1;
-        emit Deposit(slotId, coin.owner, coin.token, coin.value);
+        emit Deposit(slotId, coin.owner, coin.token, coin.value, coin.typ);
     }
 
     function exit(
@@ -295,25 +295,25 @@ contract ParentBridge is Ownable {
         coin.state = State.EXITED;
         coin.owner = coin.exit.owner;
 
-        address owner;
+        address owner = coin.owner;
+        Type typ = coin.typ;
         uint256 data;
 
         if(coin.typ == Type.ERC20) {
             ERC20 token20 = ERC20(coin.token);
-            owner = coin.owner;
             data = coin.value;
             delete coins[slotId];
 
             token20.safeTransfer(owner, data);
+            emit ExitFinalized(slotId, owner, token20, data, typ);
         } else {
             ERC721 token721 = ERC721(coin.token);
-            owner = coin.owner;
             data = coin.uid; // reentrancy
             delete coins[slotId];
 
             token721.safeTransferFrom(this, owner, data);
+            emit ExitFinalized(slotId, owner, token721, 1, typ);
         }
-        emit ExitFinalized(slotId, coin.owner, coin.token, coin.typ);
     }
 
     function finalizeMany(uint64[] slotIds) public {

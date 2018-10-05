@@ -19,6 +19,29 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func setup(t *testing.T, child *gorange.Node, parent *gorange.Node) *core.Aero {
+	childPv, parentPv := getProviders(t, child, parent)
+	log.Info("Test Providers",
+		"child owner", childPv.Accounts[0].From.Hex(),
+		"parent owner", parentPv.Accounts[0].From.Hex(),
+	)
+
+	childBridge, childAddr, parentBridge, parentAddr := deployContracts(t, childPv, parentPv)
+	log.Info("Test Contracts",
+		"child bridge", childAddr.Hex(),
+		"parent bridge", parentAddr.Hex(),
+	)
+
+	return &core.Aero{
+		Child:            childPv,
+		Parent:           parentPv,
+		ChildBridge:      childBridge,
+		ChildBridgeAddr:  childAddr,
+		ParentBridge:     parentBridge,
+		ParentBridgeAddr: parentAddr,
+	}
+}
+
 func launchTestChain(
 	t *testing.T,
 ) (
@@ -104,30 +127,8 @@ func TestAero(t *testing.T) {
 		"parent", parent.WSEndpoint(),
 	)
 
-	childPv, parentPv := getProviders(t, child, parent)
-	defer childPv.Close()
-	defer parentPv.Close()
-	log.Info("Test Providers",
-		"child owner", childPv.Accounts[0].From.Hex(),
-		"parent owner", parentPv.Accounts[0].From.Hex(),
-	)
-
-	childBridge, childAddr, parentBridge, parentAddr := deployContracts(t, childPv, parentPv)
-	log.Info("Test Contracts",
-		"child bridge", childAddr.Hex(),
-		"parent bridge", parentAddr.Hex(),
-	)
-
-	aero := &core.Aero{
-		Child:            childPv.Client,
-		Parent:           parentPv.Client,
-		ChildBridge:      childBridge,
-		ChildBridgeAddr:  childAddr,
-		ParentBridge:     parentBridge,
-		ParentBridgeAddr: parentAddr,
-		ChildOpt:         childPv.Accounts[0],
-		ParentOpt:        parentPv.Accounts[0],
-	}
+	aero := setup(t, child, parent)
+	defer aero.Close()
 
 	op := operator.New(aero)
 	op.Start()
@@ -140,37 +141,40 @@ func TestAero(t *testing.T) {
 	defer va.Stop()
 	log.Info("Test Start Validator")
 
-	tAddr, tx, tToken, err := contracts.DeployABLToken(aero.ParentOpt, parentPv)
-	assert.NoError(t, err)
-	parentPv.WaitDeployedWithTimeout(tx, 1*time.Minute)
+	parentOwner := aero.Parent.Accounts[0]
+	//childOwner := aero.Child.Accounts[0]
 
-	tx, err = tToken.Approve(aero.ParentOpt, parentAddr, utils.Ether(100))
+	tAddr, tx, tToken, err := contracts.DeployABLToken(parentOwner, aero.Parent)
 	assert.NoError(t, err)
-	parentPv.WaitMinedWithTimeout(tx, 1*time.Minute)
+	aero.WaitParentTxMined(tx, 1*time.Minute)
 
-	alt, _ := tToken.Allowance(nil, aero.ParentOpt.From, parentAddr)
+	tx, err = tToken.Approve(parentOwner, aero.ParentBridgeAddr, utils.Ether(100))
+	assert.NoError(t, err)
+	aero.WaitParentTxMined(tx, 1*time.Minute)
+
+	alt, _ := tToken.Allowance(nil, parentOwner.From, aero.ParentBridgeAddr)
 	log.Info("Test Token Approved",
-		"from", aero.ParentOpt.From.Hex(),
-		"to", parentAddr.Hex(),
+		"from", parentOwner.From.Hex(),
+		"to", aero.ParentBridgeAddr.Hex(),
 		"amount", utils.WeiToEth(alt),
 	)
 
-	for i := 1; i < 10; i++ {
-		tx, err = parentBridge.DepositFungible(aero.ParentOpt, tAddr, aero.ParentOpt.From, utils.Ether(int64(i)))
+	for i := 1; i < 3; i++ {
+		tx, err = aero.ParentBridge.DepositFungible(parentOwner, tAddr, aero.Parent.Accounts[0].From, utils.Ether(int64(i)))
 		assert.NoError(t, err)
-		parentPv.WaitMinedWithTimeout(tx, 1*time.Minute)
+		aero.WaitParentTxMined(tx, 1*time.Minute)
 		log.Info("Test Deposit Token",
-			"from", aero.ParentOpt.From.Hex(),
+			"from", parentOwner.From.Hex(),
 			"to", tAddr.Hex(),
 			"amount", i,
 		)
 	}
 
-	childTokenAddr, _ := childBridge.Token(nil)
+	childTokenAddr, _ := aero.ChildBridge.Token(nil)
 	childToken, _ := contracts.NewPeggedERC721(childTokenAddr, aero.Child)
-	childBalance, _ := childToken.BalanceOf(nil, aero.ParentOpt.From)
+	childBalance, _ := childToken.BalanceOf(nil, parentOwner.From)
 	log.Info("Test: balance",
-		"owner", aero.ParentOpt.From.Hex(),
+		"owner", parentOwner.From.Hex(),
 		"amount", childBalance,
 	)
 
